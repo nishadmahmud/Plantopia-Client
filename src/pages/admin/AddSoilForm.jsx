@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
+const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -11,16 +11,19 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
     imageUrl: '',
     subcategory: subcategories[0],
     features: [''],
-    careInstructions: [''],
-    sunlightNeeds: 'full-sun',
-    wateringFrequency: 'daily',
-    size: 'small',
-    difficulty: 'easy',
-    indoorOutdoor: 'indoor',
-    matureHeight: '',
-    growthRate: 'fast',
-    petFriendly: false,
-    seasonalInstructions: ''
+    composition: [''], // New field
+    ph: '', // New field
+    weight: '', // New field
+    coverage: '', // New field
+    nutrients: [''], // New field
+    bestFor: [''], // New field
+    organicStatus: false, // New field
+    applicationInstructions: '', // New field
+    storageInstructions: '', // New field
+    packagingSize: '', // New field
+    texture: '', // New field
+    drainageRating: 'good', // New field
+    waterRetention: 'medium' // New field
   });
   const [loading, setLoading] = useState(false);
 
@@ -34,16 +37,19 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         imageUrl: editingProduct.imageUrl || '',
         subcategory: editingProduct.subcategory || subcategories[0],
         features: editingProduct.features || [''],
-        careInstructions: editingProduct.careInstructions || [''],
-        sunlightNeeds: editingProduct.sunlightNeeds || 'full-sun',
-        wateringFrequency: editingProduct.wateringFrequency || 'daily',
-        size: editingProduct.size || 'small',
-        difficulty: editingProduct.difficulty || 'easy',
-        indoorOutdoor: editingProduct.indoorOutdoor || 'indoor',
-        matureHeight: editingProduct.matureHeight || '',
-        growthRate: editingProduct.growthRate || 'fast',
-        petFriendly: editingProduct.petFriendly || false,
-        seasonalInstructions: editingProduct.seasonalInstructions || ''
+        composition: editingProduct.composition || [''],
+        ph: editingProduct.ph || '',
+        weight: editingProduct.weight || '',
+        coverage: editingProduct.coverage || '',
+        nutrients: editingProduct.nutrients || [''],
+        bestFor: editingProduct.bestFor || [''],
+        organicStatus: editingProduct.organicStatus || false,
+        applicationInstructions: editingProduct.applicationInstructions || '',
+        storageInstructions: editingProduct.storageInstructions || '',
+        packagingSize: editingProduct.packagingSize || '',
+        texture: editingProduct.texture || '',
+        drainageRating: editingProduct.drainageRating || 'good',
+        waterRetention: editingProduct.waterRetention || 'medium'
       });
     }
   }, [editingProduct, isEditing, subcategories]);
@@ -87,15 +93,17 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         features: formData.features.filter(Boolean),
-        careInstructions: formData.careInstructions.filter(Boolean)
+        composition: formData.composition.filter(Boolean),
+        nutrients: formData.nutrients.filter(Boolean),
+        bestFor: formData.bestFor.filter(Boolean)
       };
 
       if (isEditing) {
         await onUpdate(productData);
       } else {
-        const response = await axios.post('http://localhost:3000/api/plants', productData);
+        const response = await axios.post('http://localhost:3000/api/soils', productData);
         if (response.data.success) {
-          toast.success('Plant added successfully');
+          toast.success('Soil/Fertilizer added successfully');
           setFormData({
             name: '',
             description: '',
@@ -104,22 +112,25 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             imageUrl: '',
             subcategory: subcategories[0],
             features: [''],
-            careInstructions: [''],
-            sunlightNeeds: 'full-sun',
-            wateringFrequency: 'daily',
-            size: 'small',
-            difficulty: 'easy',
-            indoorOutdoor: 'indoor',
-            matureHeight: '',
-            growthRate: 'fast',
-            petFriendly: false,
-            seasonalInstructions: ''
+            composition: [''],
+            ph: '',
+            weight: '',
+            coverage: '',
+            nutrients: [''],
+            bestFor: [''],
+            organicStatus: false,
+            applicationInstructions: '',
+            storageInstructions: '',
+            packagingSize: '',
+            texture: '',
+            drainageRating: 'good',
+            waterRetention: 'medium'
           });
         }
       }
     } catch (error) {
-      console.error('Error saving plant:', error);
-      toast.error(isEditing ? 'Failed to update plant' : 'Failed to add plant');
+      console.error('Error saving soil/fertilizer:', error);
+      toast.error(isEditing ? 'Failed to update soil/fertilizer' : 'Failed to add soil/fertilizer');
     } finally {
       setLoading(false);
     }
@@ -128,6 +139,7 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Basic Information */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Name</label>
           <input
@@ -155,101 +167,100 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Sunlight Needs</label>
-          <select
-            name="sunlightNeeds"
-            value={formData.sunlightNeeds}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="full-sun">Full Sun</option>
-            <option value="partial-sun">Partial Sun</option>
-            <option value="shade">Shade</option>
-            <option value="indirect-light">Indirect Light</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Watering Frequency</label>
-          <select
-            name="wateringFrequency"
-            value={formData.wateringFrequency}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="biweekly">Bi-weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Size</label>
-          <select
-            name="size"
-            value={formData.size}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="small">Small</option>
-            <option value="medium">Medium</option>
-            <option value="large">Large</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Care Difficulty</label>
-          <select
-            name="difficulty"
-            value={formData.difficulty}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="easy">Easy</option>
-            <option value="moderate">Moderate</option>
-            <option value="difficult">Difficult</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
-          <select
-            name="indoorOutdoor"
-            value={formData.indoorOutdoor}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="indoor">Indoor</option>
-            <option value="outdoor">Outdoor</option>
-            <option value="both">Both</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Growth Rate</label>
-          <select
-            name="growthRate"
-            value={formData.growthRate}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="fast">Fast</option>
-            <option value="moderate">Moderate</option>
-            <option value="slow">Slow</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mature Height (cm)</label>
+          <label className="block text-sm font-medium text-gray-700">pH Level</label>
           <input
             type="number"
-            name="matureHeight"
-            value={formData.matureHeight}
+            name="ph"
+            value={formData.ph}
+            onChange={handleChange}
+            step="0.1"
+            min="0"
+            max="14"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 6.5"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Weight (kg)</label>
+          <input
+            type="number"
+            name="weight"
+            value={formData.weight}
+            onChange={handleChange}
+            step="0.1"
+            min="0"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Coverage Area (sq ft)</label>
+          <input
+            type="text"
+            name="coverage"
+            value={formData.coverage}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            min="0"
+            placeholder="e.g., 100-150"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Packaging Size</label>
+          <input
+            type="text"
+            name="packagingSize"
+            value={formData.packagingSize}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 5L, 10kg"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Texture</label>
+          <select
+            name="texture"
+            value={formData.texture}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="">Select Texture</option>
+            <option value="fine">Fine</option>
+            <option value="medium">Medium</option>
+            <option value="coarse">Coarse</option>
+            <option value="mixed">Mixed</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Drainage Rating</label>
+          <select
+            name="drainageRating"
+            value={formData.drainageRating}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="excellent">Excellent</option>
+            <option value="good">Good</option>
+            <option value="moderate">Moderate</option>
+            <option value="poor">Poor</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Water Retention</label>
+          <select
+            name="waterRetention"
+            value={formData.waterRetention}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
         </div>
 
         <div>
@@ -304,14 +315,26 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Seasonal Instructions</label>
+          <label className="block text-sm font-medium text-gray-700">Application Instructions</label>
           <textarea
-            name="seasonalInstructions"
-            value={formData.seasonalInstructions}
+            name="applicationInstructions"
+            value={formData.applicationInstructions}
             onChange={handleChange}
             rows="3"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="Enter special care instructions for different seasons..."
+            placeholder="Enter detailed application instructions..."
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700">Storage Instructions</label>
+          <textarea
+            name="storageInstructions"
+            value={formData.storageInstructions}
+            onChange={handleChange}
+            rows="3"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="Enter storage instructions..."
           />
         </div>
 
@@ -319,15 +342,102 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
           <div className="flex items-center">
             <input
               type="checkbox"
-              name="petFriendly"
-              checked={formData.petFriendly}
+              name="organicStatus"
+              checked={formData.organicStatus}
               onChange={handleChange}
               className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700">
-              Pet Friendly
+              Organic Product
             </label>
           </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Composition</label>
+          {formData.composition.map((item, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'composition')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter composition item"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'composition')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('composition')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Composition
+          </button>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Nutrients</label>
+          {formData.nutrients.map((nutrient, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={nutrient}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'nutrients')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter nutrient (e.g., N-P-K ratio)"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'nutrients')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('nutrients')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Nutrient
+          </button>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Best For</label>
+          {formData.bestFor.map((item, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'bestFor')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter plant type or use case"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'bestFor')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('bestFor')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Best For
+          </button>
         </div>
 
         <div className="md:col-span-2">
@@ -358,35 +468,6 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             + Add Feature
           </button>
         </div>
-
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Care Instructions</label>
-          {formData.careInstructions.map((instruction, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={instruction}
-                onChange={(e) => handleArrayChange(index, e.target.value, 'careInstructions')}
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                placeholder="Enter care instruction"
-              />
-              <button
-                type="button"
-                onClick={() => removeArrayField(index, 'careInstructions')}
-                className="px-2 py-1 text-red-600 hover:text-red-800"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => addArrayField('careInstructions')}
-            className="mt-2 text-sm text-green-600 hover:text-green-800"
-          >
-            + Add Care Instruction
-          </button>
-        </div>
       </div>
 
       <div className="flex justify-end space-x-4">
@@ -404,11 +485,11 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
           disabled={loading}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? 'Saving...' : isEditing ? 'Update Plant' : 'Add Plant'}
+          {loading ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}
         </button>
       </div>
     </form>
   );
 };
 
-export default AddPlantForm; 
+export default AddSoilForm; 

@@ -46,17 +46,6 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [shopOpen, profileOpen, cartOpen]);
 
-  // Get the position of the Shop button for the fixed dropdown
-  const [dropdownPos, setDropdownPos] = useState({ left: 0, top: 0, width: 0 });
-  const shopBtnRef = useRef();
-  const handleShopClick = () => {
-    if (shopBtnRef.current) {
-      const rect = shopBtnRef.current.getBoundingClientRect();
-      setDropdownPos({ left: rect.left, top: rect.bottom + window.scrollY, width: rect.width });
-    }
-    setShopOpen((v) => !v);
-  };
-
   return (
     <nav className="sticky top-4 w-[90vw] max-w-6xl mx-auto mb-8 px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur shadow-lg rounded-xl z-[100]">
       <div className="text-2xl font-bold text-green-700 tracking-tight select-none">Plantopia</div>
@@ -86,9 +75,8 @@ const Navbar = () => {
         {/* Shop Dropdown */}
         <div className="relative z-50" ref={shopRef}>
           <button
-            ref={shopBtnRef}
             className={`relative px-5 py-2 rounded-lg font-medium flex items-center gap-1 text-gray-700 hover:text-green-700 transition-colors ${productCategories.some(c => c.path === location.pathname) ? 'text-green-700 font-semibold' : ''}`}
-            onClick={handleShopClick}
+            onClick={() => setShopOpen(!shopOpen)}
             type="button"
           >
             Shop
@@ -109,8 +97,7 @@ const Navbar = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="fixed bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
-                style={{ left: dropdownPos.left, top: dropdownPos.top, width: dropdownPos.width, zIndex: 9999 }}
+                className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden min-w-[160px]"
               >
                 {productCategories.map((category) => (
                   <NavLink

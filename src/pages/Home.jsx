@@ -12,6 +12,21 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const timerRef = useRef();
 
+  const getSlideImage = (category) => {
+    switch (category.id) {
+      case 'plants':
+        return 'https://cdn.pixabay.com/photo/2015/04/10/17/03/pots-716579_1280.jpg';
+      case 'soils':
+        return 'https://cdn.pixabay.com/photo/2015/05/14/02/22/soil-766281_1280.jpg';
+      case 'tools':
+        return 'https://cdn.pixabay.com/photo/2021/08/03/20/36/plants-6520443_1280.jpg';
+      case 'fertilizers':
+        return 'https://cdn.pixabay.com/photo/2019/12/28/19/36/garden-4725522_1280.jpg';
+      default:
+        return `/images/${category.id}-hero.jpg`;
+    }
+  };
+
   const nextSlide = () => setCurrent((prev) => (prev + 1) % productCategories.length);
   const prevSlide = () => setCurrent((prev) => (prev - 1 + productCategories.length) % productCategories.length);
 
@@ -61,10 +76,10 @@ const Home = () => {
   };
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-8">
       {/* Hero Slider Section */}
       <section
-        className="relative h-[600px] flex items-center justify-center overflow-hidden rounded-3xl shadow-xl mt-4"
+        className="relative h-[500px] flex items-center justify-center overflow-hidden rounded-3xl shadow-xl mt-2"
       >
         <AnimatePresence initial={false} mode="wait">
           <motion.div
@@ -76,7 +91,7 @@ const Home = () => {
             className="absolute inset-0 w-full h-full"
           >
             <img
-              src={`/images/${productCategories[current].id}-hero.jpg`}
+              src={getSlideImage(productCategories[current])}
               alt={productCategories[current].label}
               className="absolute inset-0 w-full h-full object-cover object-center z-0"
             />
@@ -129,8 +144,8 @@ const Home = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Shop by Category</h2>
+      <section className="container mx-auto px-4 py-6">
+        <h2 className="text-3xl font-bold text-center mb-8">Shop by Category</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {productCategories.map((category, index) => (
             <motion.div
@@ -160,8 +175,8 @@ const Home = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Featured Products</h2>
+      <section className="container mx-auto px-4 py-6">
+        <h2 className="text-3xl font-bold text-center mb-8">Featured Products</h2>
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[1, 2, 3].map((n) => (
@@ -212,7 +227,7 @@ const Home = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="bg-green-50 py-16">
+      <section className="bg-green-50 py-12">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Join Our Newsletter</h2>
           <p className="text-gray-600 mb-8">Get the latest updates on new products and special offers!</p>

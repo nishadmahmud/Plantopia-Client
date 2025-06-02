@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Tab } from '@headlessui/react';
 import AddProductForm from './AddProductForm';
-import { FaBox, FaUsers, FaShoppingBag, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaBox, FaUsers, FaShoppingBag, FaPlus, FaEdit, FaTrash, FaTimes, FaLeaf, FaTools, FaSeedling, FaFlask } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import AddPlantForm from './AddPlantForm';
+import AddToolForm from './AddToolForm';
+import AddSoilForm from './AddSoilForm';
 
 export const productCategories = [
   { id: 'plants', label: 'Plants', subcategories: ['Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Fruit Plants'] },
@@ -21,6 +24,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -220,6 +225,11 @@ const AdminDashboard = () => {
     </div>
   );
 
+  const getSubcategories = (category) => {
+    const categoryObj = productCategories.find(c => c.id === category);
+    return categoryObj ? categoryObj.subcategories : [];
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -288,7 +298,7 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`
               }>
-                {isEditing ? 'Edit Product' : 'Add Product'}
+                {showAddForm ? 'Cancel' : isEditing ? 'Edit Product' : 'Add Product'}
               </Tab>
             </Tab.List>
 
@@ -389,38 +399,126 @@ const AdminDashboard = () => {
 
               {/* Add/Edit Product Panel */}
               <Tab.Panel className="p-6">
-                <Tab.Group selectedIndex={selectedProductTab} onChange={setSelectedProductTab}>
-                  <Tab.List className="flex space-x-2 rounded-xl bg-gray-100 p-1">
-                    {productCategories.map((category) => (
-                      <Tab
-                        key={category.id}
-                        className={({ selected }) =>
-                          `w-full rounded-lg py-2.5 text-sm font-medium leading-5
-                          ${selected
-                            ? 'bg-white text-green-700 shadow'
-                            : 'text-gray-600 hover:bg-white/[0.12] hover:text-green-600'
-                          }`
-                        }
+                {!selectedCategory && !isEditing ? (
+                  <div className="max-w-2xl mx-auto">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-6">Select Product Category</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      {productCategories.map((category) => (
+                        <button
+                          key={category.id}
+                          onClick={() => {
+                            setSelectedCategory(category.id);
+                            setShowAddForm(true);
+                          }}
+                          className="flex flex-col items-center justify-center p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+                        >
+                          {category.id === 'plants' && <FaLeaf className="w-8 h-8 text-green-600 mb-2" />}
+                          {category.id === 'tools' && <FaTools className="w-8 h-8 text-green-600 mb-2" />}
+                          {category.id === 'soils' && <FaSeedling className="w-8 h-8 text-green-600 mb-2" />}
+                          {category.id === 'fertilizers' && <FaFlask className="w-8 h-8 text-green-600 mb-2" />}
+                          <span className="text-lg font-medium text-gray-900">{category.label}</span>
+                          <span className="text-sm text-gray-500 mt-1">{category.subcategories.length} subcategories</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : isEditing ? (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-semibold text-gray-900">
+                        Edit {editingProduct.categoryLabel}
+                      </h2>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="text-gray-500 hover:text-gray-700"
                       >
-                        {category.label}
-                      </Tab>
-                    ))}
-                  </Tab.List>
-                  <Tab.Panels className="mt-6">
-                    {productCategories.map((category) => (
-                      <Tab.Panel key={category.id}>
-                        <AddProductForm 
-                          category={category.id} 
-                          subcategories={category.subcategories}
-                          editingProduct={editingProduct}
-                          isEditing={isEditing}
-                          onUpdate={handleUpdateProduct}
-                          onCancel={handleCancelEdit}
-                        />
-                      </Tab.Panel>
-                    ))}
-                  </Tab.Panels>
-                </Tab.Group>
+                        <FaTimes className="h-6 w-6" />
+                      </button>
+                    </div>
+
+                    {editingProduct.category === 'plants' ? (
+                      <AddPlantForm
+                        subcategories={getSubcategories(editingProduct.category)}
+                        editingProduct={editingProduct}
+                        isEditing={true}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : editingProduct.category === 'tools' ? (
+                      <AddToolForm
+                        subcategories={getSubcategories(editingProduct.category)}
+                        editingProduct={editingProduct}
+                        isEditing={true}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : (editingProduct.category === 'soils' || editingProduct.category === 'fertilizers') ? (
+                      <AddSoilForm
+                        subcategories={getSubcategories(editingProduct.category)}
+                        editingProduct={editingProduct}
+                        isEditing={true}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : (
+                      <div>Unsupported category</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-semibold text-gray-900">
+                        Add New {productCategories.find(c => c.id === selectedCategory)?.label}
+                      </h2>
+                      <button
+                        onClick={() => {
+                          setSelectedCategory(null);
+                          setShowAddForm(false);
+                        }}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <FaTimes className="h-6 w-6" />
+                      </button>
+                    </div>
+
+                    {selectedCategory === 'plants' ? (
+                      <AddPlantForm
+                        subcategories={getSubcategories(selectedCategory)}
+                        editingProduct={null}
+                        isEditing={false}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={() => {
+                          setSelectedCategory(null);
+                          setShowAddForm(false);
+                        }}
+                      />
+                    ) : selectedCategory === 'tools' ? (
+                      <AddToolForm
+                        subcategories={getSubcategories(selectedCategory)}
+                        editingProduct={null}
+                        isEditing={false}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={() => {
+                          setSelectedCategory(null);
+                          setShowAddForm(false);
+                        }}
+                      />
+                    ) : (selectedCategory === 'soils' || selectedCategory === 'fertilizers') ? (
+                      <AddSoilForm
+                        subcategories={getSubcategories(selectedCategory)}
+                        editingProduct={null}
+                        isEditing={false}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={() => {
+                          setSelectedCategory(null);
+                          setShowAddForm(false);
+                        }}
+                      />
+                    ) : (
+                      <div>Unsupported category</div>
+                    )}
+                  </div>
+                )}
               </Tab.Panel>
             </Tab.Panels>
           </Tab.Group>
