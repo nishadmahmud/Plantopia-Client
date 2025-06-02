@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../auth/AuthProvider';
 import { FaLeaf } from 'react-icons/fa';
 import toast from 'react-hot-toast';
@@ -10,6 +10,10 @@ const Login = () => {
   const [error, setError] = useState('');
   const { signIn, loading, signInWithGoogle } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the redirect path from location state, or default to home
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,20 +22,20 @@ const Login = () => {
     try {
       await signIn(email, password);
       toast.success('Login successful!');
-      navigate('/');
+      navigate(from, { replace: true });
     } catch (error) {
       setError(error.message);
       toast.error(error.message);
     }
   };
 
-  // Google sign in handler (placeholder if not implemented)
+  // Google sign in handler
   const handleGoogleSignIn = async () => {
     if (signInWithGoogle) {
       try {
         await signInWithGoogle();
         toast.success('Signed in with Google!');
-        navigate('/');
+        navigate(from, { replace: true });
       } catch (error) {
         toast.error(error.message);
       }

@@ -1,8 +1,10 @@
 import React, { useContext, useState, useRef } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../auth/AuthProvider';
-import { FaShoppingCart } from 'react-icons/fa';
+import { FaShoppingCart, FaHome, FaLeaf, FaShoppingBag, FaTools, FaTrash } from 'react-icons/fa';
+import { productCategories } from '../config/categories';
+import { useCart } from '../context/CartContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
@@ -11,17 +13,7 @@ const navLinks = [
   { name: 'Contact', path: '/contact' },
 ];
 
-const shopLinks = [
-  { name: 'Plants', path: '/plants' },
-  { name: 'Seeds', path: '/seeds' },
-  { name: 'Pottery', path: '/pottery' },
-  { name: 'Tools', path: '/tools' },
-];
-
 const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=E0F2F1&color=388E3C&rounded=true';
-
-// Placeholder cart count (replace with real cart state if available)
-const cartCount = 0;
 
 const Navbar = () => {
   const location = useLocation();
@@ -33,6 +25,9 @@ const Navbar = () => {
   const shopRef = useRef();
   const profileRef = useRef();
   const cartRef = useRef();
+  const { cartItems, getCartTotal, removeFromCart, updateQuantity } = useCart();
+  const cartCount = cartItems.length;
+  const cartTotal = getCartTotal();
 
   // Close dropdowns on outside click
   React.useEffect(() => {
@@ -50,13 +45,6 @@ const Navbar = () => {
     if (shopOpen || profileOpen || cartOpen) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [shopOpen, profileOpen, cartOpen]);
-
-  // Logout handler
-  const handleLogout = async () => {
-    await logOut();
-    setProfileOpen(false);
-    navigate('/');
-  };
 
   // Get the position of the Shop button for the fixed dropdown
   const [dropdownPos, setDropdownPos] = useState({ left: 0, top: 0, width: 0 });
@@ -95,17 +83,17 @@ const Navbar = () => {
           </AnimatePresence>
           <span className={location.pathname === navLinks[0].path ? 'text-green-700 font-semibold' : ''}>{navLinks[0].name}</span>
         </NavLink>
-        {/* Shop Dropdown next */}
+        {/* Shop Dropdown */}
         <div className="relative z-50" ref={shopRef}>
           <button
             ref={shopBtnRef}
-            className={`relative px-5 py-2 rounded-lg font-medium flex items-center gap-1 text-gray-700 hover:text-green-700 transition-colors ${shopLinks.some(l => l.path === location.pathname) ? 'text-green-700 font-semibold' : ''}`}
+            className={`relative px-5 py-2 rounded-lg font-medium flex items-center gap-1 text-gray-700 hover:text-green-700 transition-colors ${productCategories.some(c => c.path === location.pathname) ? 'text-green-700 font-semibold' : ''}`}
             onClick={handleShopClick}
             type="button"
           >
             Shop
             <svg className={`w-4 h-4 transition-transform ${shopOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            {shopLinks.some(l => l.path === location.pathname) && (
+            {productCategories.some(c => c.path === location.pathname) && (
               <motion.div
                 layoutId="navbar-active"
                 className="absolute inset-0 bg-green-100/90 rounded-lg shadow-md"
@@ -124,16 +112,16 @@ const Navbar = () => {
                 className="fixed bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
                 style={{ left: dropdownPos.left, top: dropdownPos.top, width: dropdownPos.width, zIndex: 9999 }}
               >
-                {shopLinks.map((link) => (
+                {productCategories.map((category) => (
                   <NavLink
-                    key={link.name}
-                    to={link.path}
+                    key={category.id}
+                    to={category.path}
                     className={({ isActive }) =>
                       `block px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors ${isActive ? 'bg-green-100/80 text-green-700 font-semibold' : ''}`
                     }
                     onClick={() => setShopOpen(false)}
                   >
-                    {link.name}
+                    {category.label}
                   </NavLink>
                 ))}
               </motion.div>
@@ -173,14 +161,16 @@ const Navbar = () => {
         {/* Cart Icon with badge and mini cart */}
         <div className="relative" ref={cartRef}>
           <button
+            onClick={() => setCartOpen(!cartOpen)}
             className="relative focus:outline-none"
-            onClick={() => setCartOpen((v) => !v)}
             aria-label="Cart"
           >
             <FaShoppingCart className="text-xl text-green-700 hover:text-green-900 transition-colors" />
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white">
-              {cartCount}
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white">
+                {cartCount}
+              </span>
+            )}
           </button>
           <AnimatePresence>
             {cartOpen && (
@@ -189,17 +179,112 @@ const Navbar = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-green-100 z-50 overflow-hidden"
+                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
               >
-                <div className="p-4 text-center text-gray-700">
-                  <p className="mb-2 font-semibold">Your Cart</p>
-                  <div className="text-sm text-gray-500">Your cart is empty.</div>
-                  <button
-                    className="mt-4 px-4 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors"
-                    onClick={() => { setCartOpen(false); navigate('/cart'); }}
-                  >
-                    Go to Cart
-                  </button>
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-semibold text-gray-900">Shopping Cart</h3>
+                    <span className="text-sm text-gray-500">{cartCount} items</span>
+                  </div>
+                  {cartItems.length > 0 ? (
+                    <>
+                      <div className="max-h-60 overflow-auto">
+                        {cartItems.map((item) => (
+                          <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
+                              {item.image ? (
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = '/placeholder.jpg';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <FaShoppingBag className="text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                              <p className="text-sm text-gray-500">${Number(item.price).toFixed(2)}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center border border-gray-200 rounded">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateQuantity(item.id, item.quantity - 1);
+                                    }}
+                                    className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors text-sm"
+                                    disabled={item.quantity <= 1}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="px-2 py-1 text-sm min-w-[24px] text-center">{item.quantity}</span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateQuantity(item.id, item.quantity + 1);
+                                    }}
+                                    className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors text-sm"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeFromCart(item.id);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                  aria-label="Remove item"
+                                >
+                                  <FaTrash size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-gray-100">
+                        <div className="flex justify-between mb-4">
+                          <span className="text-sm text-gray-600">Subtotal</span>
+                          <span className="text-sm font-semibold text-gray-900">${getCartTotal().toFixed(2)}</span>
+                        </div>
+                        <div className="space-y-2">
+                          <Link
+                            to="/cart"
+                            onClick={() => setCartOpen(false)}
+                            className="block w-full bg-green-600 text-white text-center py-2 rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            View Cart
+                          </Link>
+                          <Link
+                            to="/checkout"
+                            onClick={() => setCartOpen(false)}
+                            className="block w-full bg-gray-800 text-white text-center py-2 rounded-lg hover:bg-gray-900 transition-colors"
+                          >
+                            Checkout
+                          </Link>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <FaShoppingBag className="text-4xl text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 mb-4">Your cart is empty</p>
+                      <Link
+                        to="/plants"
+                        onClick={() => setCartOpen(false)}
+                        className="text-green-600 hover:text-green-700 font-medium"
+                      >
+                        Start Shopping
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -207,18 +292,27 @@ const Navbar = () => {
         </div>
         {user ? (
           <div className="relative" ref={profileRef}>
-            <button
-              className="focus:outline-none"
-              onClick={() => setProfileOpen((v) => !v)}
-              title={user.displayName || 'Profile'}
-            >
+            <div className="flex items-center">
               <img
                 src={user.photoURL || defaultAvatar}
                 alt="User"
-                className="w-10 h-10 rounded-full border-2 border-green-200 shadow-sm object-cover"
+                className="w-10 h-10 rounded-full border-2 border-green-200 shadow-sm object-cover cursor-pointer"
+                onClick={() => { navigate('/profile'); }}
                 onError={e => { e.target.onerror = null; e.target.src = defaultAvatar; }}
               />
-            </button>
+              <button
+                className="ml-1 p-1 focus:outline-none text-gray-600 hover:text-gray-800"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setProfileOpen(prev => !prev);
+                }}
+                type="button"
+                aria-label="Toggle menu"
+              >
+                <svg className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+            </div>
             <AnimatePresence>
               {profileOpen && (
                 <motion.div
@@ -226,22 +320,39 @@ const Navbar = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.18 }}
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-green-100 z-50 overflow-hidden"
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
                 >
                   <button
-                    onClick={() => { setProfileOpen(false); navigate('/profile'); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setProfileOpen(false);
+                      navigate('/profile');
+                    }}
                     className="w-full text-left px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
                   >
                     Profile
                   </button>
                   <button
-                    onClick={() => { setProfileOpen(false); navigate('/cart'); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setProfileOpen(false);
+                      navigate('/cart');
+                    }}
                     className="w-full text-left px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
                   >
                     Cart
                   </button>
                   <button
-                    onClick={async () => { await logOut(); setProfileOpen(false); navigate('/'); }}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      setProfileOpen(false);
+                      try {
+                        await logOut();
+                        navigate('/');
+                      } catch (error) {
+                        console.error('Logout error:', error);
+                      }
+                    }}
                     className="w-full text-left px-5 py-3 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-t border-green-100"
                   >
                     Logout
