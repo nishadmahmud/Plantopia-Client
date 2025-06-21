@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { FaSearch } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import { useCart } from '../context/CartContext';
-import { toast } from 'react-hot-toast';
 
 const ProductList = ({ category, subcategories }) => {
   const [products, setProducts] = useState([]);
@@ -91,10 +90,6 @@ const ProductList = ({ category, subcategories }) => {
       </div>
     );
   }
-
-  // Calculate the percentage for the range slider styling
-  const minPercent = (minPrice / maxPrice) * 100;
-  const maxPercent = 100 - (maxPrice / (maxPrice + 100)) * 100;
 
   return (
     <div className="container mx-auto px-4 py-8">
