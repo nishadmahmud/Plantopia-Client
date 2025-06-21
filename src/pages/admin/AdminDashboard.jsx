@@ -7,6 +7,9 @@ import toast from 'react-hot-toast';
 import AddPlantForm from './AddPlantForm';
 import AddToolForm from './AddToolForm';
 import AddSoilForm from './AddSoilForm';
+import AddFertilizerForm from './AddFertilizerForm';
+import OrderDetailsModal from '../../components/OrderDetailsModal';
+import AddBlogForm from './AddBlogForm';
 
 export const productCategories = [
   { id: 'plants', label: 'Plants', subcategories: ['Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Fruit Plants'] },
@@ -17,7 +20,6 @@ export const productCategories = [
 
 const AdminDashboard = () => {
   const [selectedMainTab, setSelectedMainTab] = useState(0);
-  const [selectedProductTab, setSelectedProductTab] = useState(0);
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
   const [products, setProducts] = useState([]);
@@ -26,13 +28,18 @@ const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [blogs, setBlogs] = useState([]);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [editingBlog, setEditingBlog] = useState(null);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [ordersRes, usersRes, ...productResponses] = await Promise.all([
+      const [ordersRes, usersRes, blogsRes, ...productResponses] = await Promise.all([
         axios.get('http://localhost:3000/api/orders'),
         axios.get('http://localhost:3000/api/users'),
+        axios.get('http://localhost:3000/api/blogs'),
         ...productCategories.map(category => 
           axios.get(`http://localhost:3000/api/${category.id}`)
         )
@@ -43,6 +50,9 @@ const AdminDashboard = () => {
       }
       if (usersRes.data.success) {
         setUsers(usersRes.data.data);
+      }
+      if (blogsRes.data.success) {
+        setBlogs(blogsRes.data.data);
       }
 
       // Combine all products from different categories and add category info
@@ -87,16 +97,18 @@ const AdminDashboard = () => {
   };
 
   const handleEditProduct = (product) => {
-    const categoryIndex = productCategories.findIndex(cat => cat.id === product.category);
-    setSelectedProductTab(categoryIndex >= 0 ? categoryIndex : 0);
+    setSelectedCategory(product.category);
     setEditingProduct(product);
     setIsEditing(true);
-    setSelectedMainTab(3); // Switch to Add Product tab
+    setShowAddForm(true);
+    setSelectedMainTab(4); // Switch to Add Product tab (index 4, not 3)
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditingProduct(null);
+    setSelectedCategory(null);
+    setShowAddForm(false);
     setSelectedMainTab(2); // Switch back to Products list
   };
 
@@ -110,10 +122,14 @@ const AdminDashboard = () => {
       if (response.data.success) {
         toast.success('Product updated successfully');
         setProducts(products.map(p => 
-          p._id === editingProduct._id ? { ...response.data.data, category: editingProduct.category } : p
+          p._id === editingProduct._id ? { 
+            ...response.data.data, 
+            category: editingProduct.category,
+            categoryLabel: productCategories.find(cat => cat.id === editingProduct.category)?.label 
+          } : p
         ));
-        setIsEditing(false);
-        setEditingProduct(null);
+        handleCancelEdit(); // Reset all edit-related states
+        await fetchData(); // Refresh the products list
       }
     } catch (error) {
       console.error('Error updating product:', error);
@@ -125,7 +141,7 @@ const AdminDashboard = () => {
     switch (status.toLowerCase()) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'accepted':
         return 'bg-blue-100 text-blue-800';
       case 'shipped':
         return 'bg-purple-100 text-purple-800';
@@ -148,7 +164,7 @@ const AdminDashboard = () => {
     });
   };
 
-  const DashboardCard = ({ title, value, icon: Icon, color }) => (
+  const DashboardCard = ({ title, value, color }) => (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex items-center justify-between">
         <div>
@@ -156,7 +172,7 @@ const AdminDashboard = () => {
           <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
         </div>
         <div className={`p-3 rounded-full ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+          {/* Icon can be added here if needed */}
         </div>
       </div>
     </div>
@@ -194,12 +210,17 @@ const AdminDashboard = () => {
                 <div className="text-sm text-gray-500">{product.description?.substring(0, 50)}...</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  product.category === 'plants' ? 'bg-green-100 text-green-800' :
+                  product.category === 'tools' ? 'bg-blue-100 text-blue-800' :
+                  product.category === 'soils' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-purple-100 text-purple-800'
+                }`}>
                   {product.categoryLabel}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                ${product.price}
+                ৳{product.price}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {product.stock}
@@ -207,15 +228,17 @@ const AdminDashboard = () => {
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <button
                   onClick={() => handleEditProduct(product)}
-                  className="text-blue-600 hover:text-blue-900"
+                  className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
                 >
-                  <FaEdit className="inline-block" /> Edit
+                  <FaEdit className="text-lg" />
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => handleDeleteProduct(product)}
-                  className="text-red-600 hover:text-red-900 ml-4"
+                  className="text-red-600 hover:text-red-900 ml-4 inline-flex items-center gap-1"
                 >
-                  <FaTrash className="inline-block" /> Delete
+                  <FaTrash className="text-lg" />
+                  <span>Delete</span>
                 </button>
               </td>
             </tr>
@@ -228,6 +251,85 @@ const AdminDashboard = () => {
   const getSubcategories = (category) => {
     const categoryObj = productCategories.find(c => c.id === category);
     return categoryObj ? categoryObj.subcategories : [];
+  };
+
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    try {
+      console.log('Updating order status:', { orderId, newStatus });
+      
+      const response = await axios.put(`http://localhost:3000/api/orders/${orderId}/status`, {
+        status: newStatus,
+        orderId: orderId // Adding orderId to request body as well
+      });
+      
+      if (response.data.success) {
+        // Update orders list with new status
+        setOrders(orders.map(order => 
+          order._id === orderId ? { ...order, status: newStatus } : order
+        ));
+
+        // Update selected order if it's currently being viewed
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder(prev => ({ ...prev, status: newStatus }));
+        }
+
+        // Show success message
+        const message = {
+          accepted: 'Order has been accepted',
+          shipped: 'Order has been marked as shipped',
+          delivered: 'Order has been marked as delivered',
+          cancelled: 'Order has been cancelled'
+        }[newStatus] || 'Order status updated successfully';
+
+        toast.success(message);
+      } else {
+        // Handle unsuccessful response
+        console.error('Failed to update order status:', response.data);
+        toast.error(response.data.message || 'Failed to update order status');
+      }
+    } catch (error) {
+      // Detailed error logging
+      console.error('Error updating order status:', {
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        orderId,
+        newStatus
+      });
+      
+      // More descriptive error message
+      const errorMessage = error.response?.data?.message || error.message;
+      toast.error(`Failed to update order status: ${errorMessage}`);
+    }
+  };
+
+  const handleDeleteBlog = async (blogId) => {
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
+      try {
+        await axios.delete(`http://localhost:3000/api/blogs/${blogId}`);
+        toast.success('Blog post deleted successfully');
+        setBlogs(blogs.filter(b => b._id !== blogId));
+      } catch (error) {
+        console.error('Error deleting blog post:', error);
+        toast.error('Failed to delete blog post');
+      }
+    }
+  };
+
+  const handleEditBlog = (blog) => {
+    setEditingBlog(blog);
+    setShowBlogModal(true);
+  };
+
+  const handleBlogFormSubmit = (updatedBlog) => {
+    if (editingBlog) {
+      setBlogs(blogs.map(b => (b._id === updatedBlog._id ? updatedBlog : b)));
+    } else {
+      setBlogs([updatedBlog, ...blogs]);
+    }
+    setEditingBlog(null);
+    setShowBlogModal(false);
+    fetchData();
   };
 
   return (
@@ -243,19 +345,16 @@ const AdminDashboard = () => {
           <DashboardCard
             title="Total Orders"
             value={loading ? '...' : orders.length}
-            icon={FaBox}
             color="bg-blue-500"
           />
           <DashboardCard
             title="Total Users"
             value={loading ? '...' : users.length}
-            icon={FaUsers}
             color="bg-green-500"
           />
           <DashboardCard
             title="Total Products"
             value={loading ? '...' : products.length}
-            icon={FaShoppingBag}
             color="bg-purple-500"
           />
         </div>
@@ -298,6 +397,15 @@ const AdminDashboard = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`
               }>
+                Blogs
+              </Tab>
+              <Tab className={({ selected }) =>
+                `px-6 py-3 text-sm font-medium border-b-2 ${
+                  selected
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`
+              }>
                 {showAddForm ? 'Cancel' : isEditing ? 'Edit Product' : 'Add Product'}
               </Tab>
             </Tab.List>
@@ -312,7 +420,11 @@ const AdminDashboard = () => {
                     </div>
                   ) : orders.length > 0 ? (
                     orders.map((order) => (
-                      <div key={order._id} className="border border-gray-200 rounded-lg p-4">
+                      <div 
+                        key={order._id} 
+                        className="border border-gray-200 rounded-lg p-4 hover:border-green-500 transition-colors cursor-pointer"
+                        onClick={() => setSelectedOrder(order)}
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <span className="font-medium text-gray-900">Order #{order._id.slice(-6)}</span>
@@ -329,7 +441,7 @@ const AdminDashboard = () => {
                         <div className="mt-4 pt-4 border-t border-gray-100">
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-gray-600">Total Items: {order.items.length}</span>
-                            <span className="font-medium text-green-600">${order.summary.total.toFixed(2)}</span>
+                            <span className="font-medium text-green-600">৳{order.summary.total.toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -340,6 +452,16 @@ const AdminDashboard = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Order Details Modal */}
+                {selectedOrder && (
+                  <OrderDetailsModal
+                    order={selectedOrder}
+                    onClose={() => setSelectedOrder(null)}
+                    isAdmin={true}
+                    onStatusUpdate={handleUpdateOrderStatus}
+                  />
+                )}
               </Tab.Panel>
 
               {/* Users Panel */}
@@ -397,6 +519,47 @@ const AdminDashboard = () => {
                 )}
               </Tab.Panel>
 
+              {/* Blogs Panel */}
+              <Tab.Panel className="p-6 bg-white rounded-b-lg shadow-inner">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-bold text-gray-800">Blogs</h2>
+                  <button
+                    onClick={() => {
+                      setEditingBlog(null);
+                      setShowBlogModal(true);
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                  >
+                    <FaPlus /> Add New Blog Post
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {blogs.map((blog) => (
+                        <tr key={blog._id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{blog.title}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{blog.author}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(blog.createdAt)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button onClick={() => handleEditBlog(blog)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
+                            <button onClick={() => handleDeleteBlog(blog._id)} className="text-red-600 hover:text-red-900">Delete</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Tab.Panel>
+
               {/* Add/Edit Product Panel */}
               <Tab.Panel className="p-6">
                 {!selectedCategory && !isEditing ? (
@@ -452,8 +615,16 @@ const AdminDashboard = () => {
                         onUpdate={handleUpdateProduct}
                         onCancel={handleCancelEdit}
                       />
-                    ) : (editingProduct.category === 'soils' || editingProduct.category === 'fertilizers') ? (
+                    ) : editingProduct.category === 'soils' ? (
                       <AddSoilForm
+                        subcategories={getSubcategories(editingProduct.category)}
+                        editingProduct={editingProduct}
+                        isEditing={true}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={handleCancelEdit}
+                      />
+                    ) : editingProduct.category === 'fertilizers' ? (
+                      <AddFertilizerForm
                         subcategories={getSubcategories(editingProduct.category)}
                         editingProduct={editingProduct}
                         isEditing={true}
@@ -503,8 +674,19 @@ const AdminDashboard = () => {
                           setShowAddForm(false);
                         }}
                       />
-                    ) : (selectedCategory === 'soils' || selectedCategory === 'fertilizers') ? (
+                    ) : selectedCategory === 'soils' ? (
                       <AddSoilForm
+                        subcategories={getSubcategories(selectedCategory)}
+                        editingProduct={null}
+                        isEditing={false}
+                        onUpdate={handleUpdateProduct}
+                        onCancel={() => {
+                          setSelectedCategory(null);
+                          setShowAddForm(false);
+                        }}
+                      />
+                    ) : selectedCategory === 'fertilizers' ? (
+                      <AddFertilizerForm
                         subcategories={getSubcategories(selectedCategory)}
                         editingProduct={null}
                         isEditing={false}
@@ -524,6 +706,26 @@ const AdminDashboard = () => {
           </Tab.Group>
         </div>
       </div>
+
+      {showBlogModal && (
+        <AddBlogForm
+          onSuccess={handleBlogFormSubmit}
+          blogData={editingBlog}
+          onClose={() => {
+            setShowBlogModal(false);
+            setEditingBlog(null);
+          }}
+        />
+      )}
+
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          isAdmin={true}
+          onStatusUpdate={handleUpdateOrderStatus}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { FaTrash, FaArrowLeft, FaShoppingBag } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useState, useEffect } from 'react';
 
@@ -11,14 +11,13 @@ const formatPrice = (price) => {
 
 const Cart = () => {
   const [error, setError] = useState(null);
+  const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
   
-  try {
-    const { cartItems, removeFromCart, updateQuantity, getCartTotal } = useCart();
-    
-    useEffect(() => {
-      console.log('Cart Items:', cartItems);
-    }, [cartItems]);
+  useEffect(() => {
+    console.log('Cart Items:', cartItems);
+  }, [cartItems]);
 
+  try {
     if (error) {
       return (
         <div className="container mx-auto px-4 py-8">
@@ -51,7 +50,7 @@ const Cart = () => {
       );
     }
 
-    const shipping = cartItems.length > 0 ? 5.99 : 0;
+    const shipping = 100; // Fixed shipping cost of 100 Taka
     const subtotal = getCartTotal();
     const total = subtotal + shipping;
 
@@ -64,17 +63,14 @@ const Cart = () => {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               <AnimatePresence>
                 {cartItems.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
+                  <div
+                    key={item._id}
                     className="flex items-center p-6 border-b border-gray-200 last:border-b-0"
                   >
                     <div className="w-24 h-24 bg-gray-100 rounded-lg mr-6 overflow-hidden">
-                      {item.image ? (
+                      {item.imageUrl ? (
                         <img
-                          src={item.image}
+                          src={item.imageUrl}
                           alt={item.name}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -90,13 +86,13 @@ const Cart = () => {
                     </div>
                     <div className="flex-grow">
                       <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                      <p className="text-gray-600">${formatPrice(item.price)}</p>
+                      <p className="text-gray-600">৳{formatPrice(item.price)}</p>
                       <p className="text-sm text-gray-500 capitalize">Category: {item.category}</p>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center border border-gray-300 rounded-lg">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item._id, item.quantity - 1)}
                           className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
                           disabled={item.quantity <= 1}
                         >
@@ -104,21 +100,21 @@ const Cart = () => {
                         </button>
                         <span className="px-3 py-1 min-w-[40px] text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item._id, item.quantity + 1)}
                           className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
                         >
                           +
                         </button>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item._id)}
                         className="text-red-500 hover:text-red-700 transition-colors p-2"
                         aria-label="Remove item"
                       >
                         <FaTrash />
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </AnimatePresence>
             </div>
@@ -131,16 +127,16 @@ const Cart = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold">${formatPrice(subtotal)}</span>
+                  <span className="font-semibold">৳{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="font-semibold">${formatPrice(shipping)}</span>
+                  <span className="font-semibold">৳{formatPrice(shipping)}</span>
                 </div>
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between">
                     <span className="text-lg font-semibold">Total</span>
-                    <span className="text-lg font-bold text-green-600">${formatPrice(total)}</span>
+                    <span className="text-lg font-bold text-green-600">৳{formatPrice(total)}</span>
                   </div>
                 </div>
                 <Link
@@ -157,15 +153,11 @@ const Cart = () => {
     );
   } catch (err) {
     console.error('Error in Cart component:', err);
-    setError(err);
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p>Something went wrong. Please try again later.</p>
-          <Link to="/" className="text-red-600 underline">Return Home</Link>
-        </div>
-      </div>
-    );
+    // Setting error in a state update and re-rendering is better than trying to recover here
+    if (!error) {
+      setError(err);
+    }
+    return null; // Return null and let the next render handle the error display
   }
 };
 

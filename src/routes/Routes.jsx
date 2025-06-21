@@ -9,6 +9,7 @@ import Tools from "../pages/Tools";
 import Soils from "../pages/Soils";
 import Fertilizers from "../pages/Fertilizers";
 import Cart from "../pages/Cart";
+import Wishlist from "../pages/Wishlist";
 import ProductDetails from "../pages/ProductDetails";
 import Checkout from "../pages/Checkout";
 import Profile from "../pages/Profile";
@@ -17,6 +18,9 @@ import Contact from "../pages/Contact";
 import Shipping from "../pages/Shipping";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import PrivateRoute from "../components/PrivateRoute";
+import AdminRoute from "./AdminRoute";
+import Blogs from "../pages/Blogs";
+import BlogDetails from "../pages/BlogDetails";
 
 // Error element component
 const RouteError = () => {
@@ -50,6 +54,11 @@ const router = createBrowserRouter([
       {
         path: "cart",
         element: <Cart />,
+        errorElement: <NotFound />
+      },
+      {
+        path: "wishlist",
+        element: <PrivateRoute><Wishlist /></PrivateRoute>,
         errorElement: <NotFound />
       },
       {
@@ -113,8 +122,18 @@ const router = createBrowserRouter([
         errorElement: <NotFound />
       },
       {
+        path: "blogs",
+        element: <Blogs />,
+        errorElement: <NotFound />
+      },
+      {
+        path: "blogs/:id",
+        element: <BlogDetails />,
+        errorElement: <NotFound />
+      },
+      {
         path: "admin",
-        element: <PrivateRoute><AdminDashboard /></PrivateRoute>,
+        element: <AdminRoute><AdminDashboard /></AdminRoute>,
         errorElement: <NotFound />
       }
     ]

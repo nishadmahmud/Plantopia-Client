@@ -3,7 +3,8 @@ import { AuthContext } from '../auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import axios from 'axios';
-import { FaBox, FaShoppingBag } from 'react-icons/fa';
+import { FaBox, FaShoppingBag, FaTrash, FaCamera, FaUpload } from 'react-icons/fa';
+import OrderDetailsModal from '../components/OrderDetailsModal';
 
 const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=E0F2F1&color=388E3C&rounded=true';
 
@@ -14,6 +15,10 @@ const Profile = () => {
   const [photo, setPhoto] = useState('');
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const navigate = useNavigate();
 
   // Form state for shipping address
@@ -58,6 +63,98 @@ const Profile = () => {
       setPhoto(user.photoURL || '');
     }
   }, [user]);
+
+  // Handle image selection
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle image upload
+  const handleImageUpload = async () => {
+    if (!selectedImage) {
+      toast.error('Please select an image first');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedImage);
+
+      const response = await axios.post('http://localhost:3000/api/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.success) {
+        setPhoto(response.data.imageUrl);
+        setSelectedImage(null);
+        setImagePreview(null);
+        toast.success('Image uploaded successfully!');
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  // Function to handle order deletion
+  const handleOrderDelete = (orderId) => {
+    if (userData?.orders) {
+      setUserData({
+        ...userData,
+        orders: userData.orders.filter(order => order._id !== orderId)
+      });
+    }
+  };
+
+  // Function to handle direct order deletion from order cards
+  const handleDirectOrderDelete = async (orderId, e) => {
+    e.stopPropagation(); // Prevent opening the modal
+    
+    if (!window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`http://localhost:3000/api/orders/${orderId}`, {
+        data: { userId: user.uid }
+      });
+
+      if (response.data.success) {
+        toast.success('Order deleted successfully');
+        handleOrderDelete(orderId);
+      }
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      toast.error(error.response?.data?.message || 'Failed to delete order');
+    }
+  };
 
   if (authLoading) {
     return (
@@ -149,12 +246,12 @@ const Profile = () => {
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       {isEditing ? (
-        <input
-          type="text"
+              <input
+                type="text"
           name={name}
           value={value}
           onChange={handleShippingChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
           placeholder={`Enter ${label.toLowerCase()}`}
         />
       ) : (
@@ -176,7 +273,7 @@ const Profile = () => {
                 <div className="flex items-center space-x-6">
                   <div className="relative">
                     <img
-                      src={photo || defaultAvatar}
+                      src={imagePreview || photo || defaultAvatar}
                       alt="Profile"
                       className="w-24 h-24 rounded-full border-4 border-white shadow-lg object-cover"
                       onError={(e) => {
@@ -186,7 +283,7 @@ const Profile = () => {
                     />
                     {isEditing && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                        <span className="text-white text-xs">Update photo URL below</span>
+                        <FaCamera className="text-white text-xl" />
                       </div>
                     )}
                   </div>
@@ -214,8 +311,77 @@ const Profile = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-6">
                   <ProfileField label="Display Name" value={name} />
-                  {isEditing && <ProfileField label="Photo URL" value={photo} />}
                   <ProfileField label="Email" value={user.email} editable={false} />
+                  
+                  {/* Image Upload Section */}
+                  {isEditing && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-3">Profile Picture</label>
+                      <div className="space-y-4">
+                        {/* Image Upload Input */}
+                        <div className="flex items-center space-x-4">
+                          <label className="flex items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-green-500 transition-colors">
+                            <div className="text-center">
+                              <FaUpload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                              <span className="text-sm text-gray-500">Upload Image</span>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageSelect}
+                              className="hidden"
+                            />
+                          </label>
+                          
+                          {/* Upload Button */}
+                          {selectedImage && (
+                            <button
+                              type="button"
+                              onClick={handleImageUpload}
+                              disabled={uploadingImage}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center space-x-2"
+                            >
+                              {uploadingImage ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FaUpload className="w-4 h-4" />
+                                  <span>Upload</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        
+                        {/* Image Preview */}
+                        {imagePreview && (
+                          <div className="mt-4">
+                            <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Current Photo URL Field */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Or enter photo URL</label>
+                          <input
+                            type="url"
+                            value={photo}
+                            onChange={(e) => setPhoto(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Enter photo URL"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-gray-200 pt-6">
@@ -232,13 +398,13 @@ const Profile = () => {
 
                 {isEditing && (
                   <div className="pt-6">
-                    <button
-                      type="submit"
-                      disabled={loading}
+              <button
+                type="submit"
+                disabled={loading}
                       className="w-full px-6 py-3 rounded-lg bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-                    >
+              >
                       {loading ? 'Saving Changes...' : 'Save Changes'}
-                    </button>
+              </button>
                   </div>
                 )}
               </div>
@@ -253,53 +419,73 @@ const Profile = () => {
               <h2 className="text-2xl font-semibold text-gray-900">My Orders</h2>
             </div>
             <div className="p-6">
-              {userData?.orders && userData.orders.length > 0 ? (
-                <div className="space-y-4">
-                  {userData.orders.map((order) => (
-                    <div key={order._id} className="border border-gray-200 rounded-lg p-4 hover:border-green-200 transition-colors">
-                      <div className="flex justify-between items-start mb-2">
+              <div className="space-y-4">
+                {userData?.orders?.length > 0 ? (
+                  userData.orders.map((order) => (
+                    <div
+                      key={order._id}
+                      onClick={() => setSelectedOrder(order)}
+                      className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100 hover:border-green-500 relative"
+                    >
+                      {/* Delete button */}
+                      <button
+                        onClick={(e) => handleDirectOrderDelete(order._id, e)}
+                        className="absolute top-2 right-2 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete order"
+                      >
+                        <FaTrash className="w-4 h-4" />
+                      </button>
+                      
+                      <div className="flex justify-between items-start mb-4">
                         <div>
-                          <span className="font-medium text-gray-900">Order #{order._id.slice(-6)}</span>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Order #{order._id.slice(-6)}
+                          </h3>
                           <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getOrderStatusColor(order.status)}`}>
                           {order.status}
                         </span>
                       </div>
-                      <div className="mt-4 space-y-2">
-                        {order.items.map((item, index) => (
-                          <div key={index} className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">{item.name} × {item.quantity}</span>
-                            <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                        <div className="border-t border-gray-100 pt-2 mt-2">
-                          <div className="flex justify-between items-center font-medium">
-                            <span>Total</span>
-                            <span className="text-green-600">${order.summary.total.toFixed(2)}</span>
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <FaBox className="text-green-600" />
+                          <span>{order.items.length} items</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <FaShoppingBag className="text-green-600" />
+                          <span>Total: ${order.summary.total.toFixed(2)}</span>
+                        </div>
+                        <div className="text-green-600 hover:text-green-700">
+                          View Details →
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <FaBox className="text-6xl text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-4">No orders yet</p>
-                  <button
-                    onClick={() => navigate('/plants')}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 mx-auto"
-                  >
-                    <FaShoppingBag />
-                    Start Shopping
-                  </button>
-                </div>
-              )}
+                  ))
+                ) : (
+                  <div className="text-center py-8 bg-white rounded-lg shadow">
+                    <FaBox className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Start shopping to see your orders here.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          isAdmin={false}
+          onOrderDelete={handleDirectOrderDelete}
+        />
+      )}
     </div>
   );
 };

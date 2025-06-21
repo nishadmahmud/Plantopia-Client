@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import ImageUpload from '../../components/ImageUpload';
 
 const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -23,7 +24,8 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
     packagingSize: '', // New field
     texture: '', // New field
     drainageRating: 'good', // New field
-    waterRetention: 'medium' // New field
+    waterRetention: 'medium', // New field
+    isFeatured: false
   });
   const [loading, setLoading] = useState(false);
 
@@ -49,7 +51,8 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         packagingSize: editingProduct.packagingSize || '',
         texture: editingProduct.texture || '',
         drainageRating: editingProduct.drainageRating || 'good',
-        waterRetention: editingProduct.waterRetention || 'medium'
+        waterRetention: editingProduct.waterRetention || 'medium',
+        isFeatured: editingProduct.isFeatured || false
       });
     }
   }, [editingProduct, isEditing, subcategories]);
@@ -60,6 +63,10 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleImageUpload = (imageUrl) => {
+    setFormData(prev => ({ ...prev, imageUrl }));
   };
 
   const handleArrayChange = (index, value, field) => {
@@ -124,7 +131,8 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
             packagingSize: '',
             texture: '',
             drainageRating: 'good',
-            waterRetention: 'medium'
+            waterRetention: 'medium',
+            isFeatured: false
           });
         }
       }
@@ -291,14 +299,10 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Image URL</label>
-          <input
-            type="url"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            required
+          <ImageUpload 
+            onImageUpload={handleImageUpload}
+            currentImageUrl={formData.imageUrl}
+            label="Product Image"
           />
         </div>
 
@@ -467,6 +471,28 @@ const AddSoilForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
           >
             + Add Feature
           </button>
+        </div>
+
+        <div className="md:col-span-2">
+          <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
+            <input
+              type="checkbox"
+              name="isFeatured"
+              id="isFeatured"
+              checked={formData.isFeatured}
+              onChange={handleChange}
+              className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isFeatured" className="ml-2 flex items-center gap-2">
+              <span className="text-base font-medium text-gray-700">Mark as Featured Product</span>
+              {formData.isFeatured && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Featured
+                </span>
+              )}
+            </label>
+          </div>
+          <p className="mt-1 text-sm text-gray-500">Featured soils and fertilizers will be highlighted on the home page and in product listings.</p>
         </div>
       </div>
 

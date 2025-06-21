@@ -53,12 +53,15 @@ const Home = () => {
           response.success ? response.data : []
         );
 
-        // Get 3 random products for featured section
-        const randomProducts = allProducts
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
+        // Filter for featured products only
+        const featuredProducts = allProducts.filter(product => product.isFeatured);
 
-        setFeaturedProducts(randomProducts);
+        // If we have more than 3 featured products, randomly select 3
+        const selectedProducts = featuredProducts.length > 3 
+          ? featuredProducts.sort(() => Math.random() - 0.5).slice(0, 3)
+          : featuredProducts;
+
+        setFeaturedProducts(selectedProducts);
       } catch (error) {
         console.error('Error fetching featured products:', error);
       } finally {
@@ -211,7 +214,7 @@ const Home = () => {
                   <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                   <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold">${product.price}</span>
+                    <span className="text-xl font-bold">৳{product.price}</span>
                     <Link
                       to={`/product/${product._id}`}
                       className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"

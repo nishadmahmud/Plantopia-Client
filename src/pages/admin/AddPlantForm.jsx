@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import ImageUpload from '../../components/ImageUpload';
 
 const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -20,7 +21,8 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
     matureHeight: '',
     growthRate: 'fast',
     petFriendly: false,
-    seasonalInstructions: ''
+    seasonalInstructions: '',
+    isFeatured: false
   });
   const [loading, setLoading] = useState(false);
 
@@ -43,7 +45,8 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         matureHeight: editingProduct.matureHeight || '',
         growthRate: editingProduct.growthRate || 'fast',
         petFriendly: editingProduct.petFriendly || false,
-        seasonalInstructions: editingProduct.seasonalInstructions || ''
+        seasonalInstructions: editingProduct.seasonalInstructions || '',
+        isFeatured: editingProduct.isFeatured || false
       });
     }
   }, [editingProduct, isEditing, subcategories]);
@@ -54,6 +57,10 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleImageUpload = (imageUrl) => {
+    setFormData(prev => ({ ...prev, imageUrl }));
   };
 
   const handleArrayChange = (index, value, field) => {
@@ -96,9 +103,9 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         const response = await axios.post('http://localhost:3000/api/plants', productData);
         if (response.data.success) {
           toast.success('Plant added successfully');
-          setFormData({
-            name: '',
-            description: '',
+        setFormData({
+          name: '',
+          description: '',
             price: '',
             stock: '',
             imageUrl: '',
@@ -113,7 +120,8 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             matureHeight: '',
             growthRate: 'fast',
             petFriendly: false,
-            seasonalInstructions: ''
+            seasonalInstructions: '',
+            isFeatured: false
           });
         }
       }
@@ -132,12 +140,12 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
           <label className="block text-sm font-medium text-gray-700">Name</label>
           <input
             type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            required
-          />
+                required
+              />
         </div>
 
         <div>
@@ -145,7 +153,7 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
           <select
             name="subcategory"
             value={formData.subcategory}
-            onChange={handleChange}
+                onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           >
             {subcategories.map((sub) => (
@@ -159,7 +167,7 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
           <select
             name="sunlightNeeds"
             value={formData.sunlightNeeds}
-            onChange={handleChange}
+                onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           >
             <option value="full-sun">Full Sun</option>
@@ -172,9 +180,9 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         <div>
           <label className="block text-sm font-medium text-gray-700">Watering Frequency</label>
           <select
-            name="wateringFrequency"
-            value={formData.wateringFrequency}
-            onChange={handleChange}
+                name="wateringFrequency"
+                value={formData.wateringFrequency}
+                onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           >
             <option value="daily">Daily</option>
@@ -199,7 +207,7 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Care Difficulty</label>
+          <label className="block text-sm font-medium text-gray-700">Difficulty</label>
           <select
             name="difficulty"
             value={formData.difficulty}
@@ -207,13 +215,13 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           >
             <option value="easy">Easy</option>
-            <option value="moderate">Moderate</option>
-            <option value="difficult">Difficult</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
+          <label className="block text-sm font-medium text-gray-700">Indoor/Outdoor</label>
           <select
             name="indoorOutdoor"
             value={formData.indoorOutdoor}
@@ -227,6 +235,18 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         </div>
 
         <div>
+          <label className="block text-sm font-medium text-gray-700">Mature Height</label>
+          <input
+            type="text"
+            name="matureHeight"
+            value={formData.matureHeight}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 2-3 feet"
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700">Growth Rate</label>
           <select
             name="growthRate"
@@ -234,22 +254,10 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
           >
-            <option value="fast">Fast</option>
-            <option value="moderate">Moderate</option>
             <option value="slow">Slow</option>
+            <option value="medium">Medium</option>
+            <option value="fast">Fast</option>
           </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mature Height (cm)</label>
-          <input
-            type="number"
-            name="matureHeight"
-            value={formData.matureHeight}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            min="0"
-          />
         </div>
 
         <div>
@@ -280,14 +288,10 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Image URL</label>
-          <input
-            type="url"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            required
+          <ImageUpload 
+            onImageUpload={handleImageUpload}
+            currentImageUrl={formData.imageUrl}
+            label="Plant Image"
           />
         </div>
 
@@ -311,7 +315,7 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
             onChange={handleChange}
             rows="3"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="Enter special care instructions for different seasons..."
+            placeholder="Enter seasonal care instructions..."
           />
         </div>
 
@@ -328,6 +332,28 @@ const AddPlantForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCa
               Pet Friendly
             </label>
           </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
+            <input
+              type="checkbox"
+              name="isFeatured"
+              id="isFeatured"
+              checked={formData.isFeatured}
+              onChange={handleChange}
+              className="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isFeatured" className="ml-2 flex items-center gap-2">
+              <span className="text-base font-medium text-gray-700">Mark as Featured Product</span>
+              {formData.isFeatured && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  Featured
+                </span>
+              )}
+            </label>
+          </div>
+          <p className="mt-1 text-sm text-gray-500">Featured plants will be highlighted on the home page and in product listings.</p>
         </div>
 
         <div className="md:col-span-2">

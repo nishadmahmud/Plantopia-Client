@@ -2,13 +2,13 @@ import React, { useContext, useState, useRef } from 'react';
 import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../auth/AuthProvider';
-import { FaShoppingCart, FaHome, FaLeaf, FaShoppingBag, FaTools, FaTrash } from 'react-icons/fa';
+import { FaShoppingCart, FaShoppingBag, FaTrash, FaBars, FaTimes } from 'react-icons/fa';
 import { productCategories } from '../config/categories';
 import { useCart } from '../context/CartContext';
 
 const navLinks = [
   { name: 'Home', path: '/' },
-  // Shop dropdown will be inserted here
+  { name: 'Blogs', path: '/blogs' },
   { name: 'About', path: '/about' },
   { name: 'Contact', path: '/contact' },
 ];
@@ -22,6 +22,7 @@ const Navbar = () => {
   const [shopOpen, setShopOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const shopRef = useRef();
   const profileRef = useRef();
   const cartRef = useRef();
@@ -46,49 +47,68 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [shopOpen, profileOpen, cartOpen]);
 
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
+
+  const renderNavLink = (link, isMobile = false) => (
+    <NavLink
+      key={link.name}
+      to={link.path}
+      className={({ isActive }) =>
+        isMobile
+          ? `block px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors ${
+              isActive ? 'bg-green-100/80 text-green-700 font-semibold' : ''
+            }`
+          : `relative px-5 py-2 rounded-lg font-medium text-gray-700 hover:text-green-700 transition-colors`
+      }
+    >
+      {!isMobile && (
+        <AnimatePresence>
+          {location.pathname === link.path && (
+            <motion.div
+              layoutId="navbar-active"
+              className="absolute inset-0 bg-green-100/90 rounded-lg shadow-md"
+              style={{ zIndex: -1 }}
+            />
+          )}
+        </AnimatePresence>
+      )}
+      <span className={!isMobile && location.pathname === link.path ? 'text-green-700 font-semibold' : ''}>{link.name}</span>
+    </NavLink>
+  );
+
   return (
-    <nav className="sticky top-4 w-[90vw] max-w-6xl mx-auto mb-8 px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur shadow-lg rounded-xl z-[100]">
-      <div className="text-2xl font-bold text-green-700 tracking-tight select-none">Plantopia</div>
-      <div className="flex gap-2 relative items-center">
-        {/* Home link first */}
-        <NavLink
-          key={navLinks[0].name}
-          to={navLinks[0].path}
-          className="relative px-5 py-2 rounded-lg font-medium text-gray-700 hover:text-green-700 transition-colors"
-          style={{ zIndex: 1 }}
-        >
-          <AnimatePresence>
-            {location.pathname === navLinks[0].path && (
-              <motion.div
-                layoutId="navbar-active"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute inset-0 bg-green-100/90 rounded-lg shadow-md"
-                transition={{ type: 'spring', stiffness: 700, damping: 18 }}
-                style={{ zIndex: -1 }}
-              />
-            )}
-          </AnimatePresence>
-          <span className={location.pathname === navLinks[0].path ? 'text-green-700 font-semibold' : ''}>{navLinks[0].name}</span>
-        </NavLink>
+    <nav className="sticky top-4 w-[90vw] max-w-6xl mx-auto mb-8 px-4 md:px-6 py-3 flex items-center justify-between bg-white/80 backdrop-blur shadow-lg rounded-xl z-50">
+      {/* Logo */}
+      <Link to="/" className="text-2xl font-bold text-green-700 tracking-tight select-none">Plantopia</Link>
+
+      {/* Mobile Menu Button */}
+      <button
+        className="md:hidden p-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+      >
+        {mobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+      </button>
+
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex gap-2 relative items-center">
+        {renderNavLink(navLinks[0])}
+
         {/* Shop Dropdown */}
         <div className="relative z-50" ref={shopRef}>
           <button
-            className={`relative px-5 py-2 rounded-lg font-medium flex items-center gap-1 text-gray-700 hover:text-green-700 transition-colors ${productCategories.some(c => c.path === location.pathname) ? 'text-green-700 font-semibold' : ''}`}
+            className={`relative px-5 py-2 rounded-lg font-medium flex items-center gap-1 text-gray-700 hover:text-green-700 transition-colors ${
+              productCategories.some(c => location.pathname.startsWith(c.path)) ? 'text-green-700 font-semibold' : ''
+            }`}
             onClick={() => setShopOpen(!shopOpen)}
             type="button"
           >
             Shop
-            <svg className={`w-4 h-4 transition-transform ${shopOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            {productCategories.some(c => c.path === location.pathname) && (
-              <motion.div
-                layoutId="navbar-active"
-                className="absolute inset-0 bg-green-100/90 rounded-lg shadow-md"
-                transition={{ type: 'spring', stiffness: 700, damping: 18 }}
-                style={{ zIndex: -1 }}
-              />
-            )}
+            <svg className={`w-4 h-4 transition-transform ${shopOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
           <AnimatePresence>
             {shopOpen && (
@@ -96,15 +116,16 @@ const Navbar = () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.18 }}
-                className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden min-w-[160px]"
+                className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-lg border border-green-100 z-[60] overflow-hidden min-w-[160px]"
               >
                 {productCategories.map((category) => (
                   <NavLink
                     key={category.id}
                     to={category.path}
                     className={({ isActive }) =>
-                      `block px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors ${isActive ? 'bg-green-100/80 text-green-700 font-semibold' : ''}`
+                      `block px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors ${
+                        isActive ? 'bg-green-100/80 text-green-700 font-semibold' : ''
+                      }`
                     }
                     onClick={() => setShopOpen(false)}
                   >
@@ -115,35 +136,43 @@ const Navbar = () => {
             )}
           </AnimatePresence>
         </div>
-        {/* About and Contact links */}
-        {navLinks.slice(1).map((link) => {
-          const isActive = location.pathname === link.path;
-          return (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className="relative px-5 py-2 rounded-lg font-medium text-gray-700 hover:text-green-700 transition-colors"
-              style={{ zIndex: 1 }}
-            >
-              <AnimatePresence>
-                {isActive && (
-                  <motion.div
-                    layoutId="navbar-active"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="absolute inset-0 bg-green-100/90 rounded-lg shadow-md"
-                    transition={{ type: 'spring', stiffness: 700, damping: 18 }}
-                    style={{ zIndex: -1 }}
-                  />
-                )}
-              </AnimatePresence>
-              <span className={isActive ? 'text-green-700 font-semibold' : ''}>{link.name}</span>
-            </NavLink>
-          );
-        })}
+
+        {navLinks.slice(1).map(link => renderNavLink(link))}
       </div>
-      {/* User/Profile or Login and Cart */}
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="absolute top-full left-4 right-4 mt-2 bg-white rounded-xl shadow-lg border border-green-100 z-50 overflow-hidden md:hidden"
+          >
+            <div className="py-2">
+              {navLinks.map(link => renderNavLink(link, true))}
+              <div className="px-5 py-3 border-t border-gray-100">
+                <p className="text-sm font-medium text-gray-600 mb-2">Shop Categories</p>
+                {productCategories.map((category) => (
+                  <NavLink
+                    key={category.id}
+                    to={category.path}
+                    className={({ isActive }) =>
+                      `block px-4 py-2 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors rounded-md ${
+                        isActive ? 'bg-green-100/80 text-green-700 font-semibold' : ''
+                      }`
+                    }
+                  >
+                    {category.label}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart and Profile Section */}
       <div className="flex items-center gap-4">
         {/* Cart Icon with badge and mini cart */}
         <div className="relative" ref={cartRef}>
@@ -165,8 +194,7 @@ const Navbar = () => {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
+                className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-green-100 z-[70] overflow-hidden"
               >
                 <div className="p-4">
                   <div className="flex justify-between items-center mb-3">
@@ -177,11 +205,11 @@ const Navbar = () => {
                     <>
                       <div className="max-h-60 overflow-auto">
                         {cartItems.map((item) => (
-                          <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-b-0">
+                          <div key={item._id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-b-0">
                             <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
-                              {item.image ? (
+                              {item.imageUrl ? (
                                 <img
-                                  src={item.image}
+                                  src={item.imageUrl}
                                   alt={item.name}
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -197,13 +225,13 @@ const Navbar = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
-                              <p className="text-sm text-gray-500">${Number(item.price).toFixed(2)}</p>
+                              <p className="text-sm text-gray-500">৳{Number(item.price).toFixed(2)}</p>
                               <div className="flex items-center justify-between mt-2">
                                 <div className="flex items-center border border-gray-200 rounded">
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      updateQuantity(item.id, item.quantity - 1);
+                                      updateQuantity(item._id, item.quantity - 1);
                                     }}
                                     className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors text-sm"
                                     disabled={item.quantity <= 1}
@@ -214,7 +242,7 @@ const Navbar = () => {
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      updateQuantity(item.id, item.quantity + 1);
+                                      updateQuantity(item._id, item.quantity + 1);
                                     }}
                                     className="px-2 py-1 text-gray-600 hover:bg-gray-100 transition-colors text-sm"
                                   >
@@ -224,7 +252,7 @@ const Navbar = () => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    removeFromCart(item.id);
+                                    removeFromCart(item._id);
                                   }}
                                   className="text-red-500 hover:text-red-700 transition-colors p-1"
                                   aria-label="Remove item"
@@ -239,7 +267,7 @@ const Navbar = () => {
                       <div className="mt-4 pt-3 border-t border-gray-100">
                         <div className="flex justify-between mb-4">
                           <span className="text-sm text-gray-600">Subtotal</span>
-                          <span className="text-sm font-semibold text-gray-900">${getCartTotal().toFixed(2)}</span>
+                          <span className="text-sm font-semibold text-gray-900">৳{cartTotal.toFixed(2)}</span>
                         </div>
                         <div className="space-y-2">
                           <Link
@@ -277,6 +305,8 @@ const Navbar = () => {
             )}
           </AnimatePresence>
         </div>
+
+        {/* User Profile Section */}
         {user ? (
           <div className="relative" ref={profileRef}>
             <div className="flex items-center">
@@ -297,7 +327,9 @@ const Navbar = () => {
                 type="button"
                 aria-label="Toggle menu"
               >
-                <svg className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                <svg className={`w-4 h-4 transition-transform ${profileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
             </div>
             <AnimatePresence>
@@ -306,12 +338,10 @@ const Navbar = () => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.18 }}
-                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-green-100 z-[9999] overflow-hidden"
+                  className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-green-100 z-[70] overflow-hidden"
                 >
                   <button
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setProfileOpen(false);
                       navigate('/profile');
                     }}
@@ -320,8 +350,7 @@ const Navbar = () => {
                     Profile
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setProfileOpen(false);
                       navigate('/cart');
                     }}
@@ -330,8 +359,16 @@ const Navbar = () => {
                     Cart
                   </button>
                   <button
-                    onClick={async (e) => {
-                      e.preventDefault();
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate('/wishlist');
+                    }}
+                    className="w-full text-left px-5 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors"
+                  >
+                    Wishlist
+                  </button>
+                  <button
+                    onClick={async () => {
                       setProfileOpen(false);
                       try {
                         await logOut();

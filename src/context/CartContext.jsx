@@ -63,7 +63,7 @@ export const CartProvider = ({ children }) => {
     const mergedCart = [...dbCart];
     
     localCart.forEach(localItem => {
-      const existingItem = mergedCart.find(item => item.id === localItem.id);
+      const existingItem = mergedCart.find(item => item._id === localItem._id);
       if (existingItem) {
         existingItem.quantity += localItem.quantity;
       } else {
@@ -88,20 +88,29 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addToCart = async (item) => {
-    const existingItem = cartItems.find((cartItem) => cartItem.id === item.id);
+  const addToCart = async (item, quantity = 1) => {
+    const existingItem = cartItems.find((cartItem) => cartItem._id === item._id);
     let newCart;
 
     if (existingItem) {
       newCart = cartItems.map((cartItem) =>
-        cartItem.id === item.id
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+        cartItem._id === item._id
+          ? { ...cartItem, quantity: cartItem.quantity + quantity }
           : cartItem
       );
-      toast.success(`Added another ${item.name} to cart`);
+      toast.success(`Added ${quantity} more ${item.name} to cart`);
     } else {
-      newCart = [...cartItems, { ...item, quantity: 1 }];
-      toast.success(`${item.name} added to cart`);
+      // Make sure we're including all necessary product details
+      const cartItem = {
+        _id: item._id,
+        name: item.name,
+        price: item.price,
+        imageUrl: item.imageUrl,
+        category: item.category,
+        quantity: quantity
+      };
+      newCart = [...cartItems, cartItem];
+      toast.success(`${quantity} ${item.name} added to cart`);
     }
 
     setCartItems(newCart);
@@ -111,8 +120,8 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (itemId) => {
-    const itemToRemove = cartItems.find(item => item.id === itemId);
-    const newCart = cartItems.filter((item) => item.id !== itemId);
+    const itemToRemove = cartItems.find(item => item._id === itemId);
+    const newCart = cartItems.filter((item) => item._id !== itemId);
     setCartItems(newCart);
     
     if (user?.uid) {
@@ -131,7 +140,7 @@ export const CartProvider = ({ children }) => {
     }
 
     const newCart = cartItems.map((item) =>
-      item.id === itemId ? { ...item, quantity } : item
+      item._id === itemId ? { ...item, quantity } : item
     );
     setCartItems(newCart);
     

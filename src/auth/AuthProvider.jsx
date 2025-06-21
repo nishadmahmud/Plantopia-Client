@@ -11,19 +11,23 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
 import axios from "axios";
-import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
-  // Helper function to create/update user in database
-  const syncUserWithDatabase = async (currentUser) => {
-    if (!currentUser) return;
+  // Helper function to create/update user in database and get role
+  const syncAndFetchUser = async (currentUser) => {
+    if (!currentUser) {
+      setUserRole(null);
+      return;
+    }
     
     try {
+      // Sync user data with the backend
       await axios.post('http://localhost:3000/api/users', {
         uid: currentUser.uid,
         displayName: currentUser.displayName,
@@ -31,8 +35,15 @@ const AuthProvider = ({ children }) => {
         photoURL: currentUser.photoURL,
         createdAt: new Date()
       });
+
+      // After syncing, fetch the full user profile including the role
+      const response = await axios.get(`http://localhost:3000/api/users/${currentUser.uid}`);
+      if (response.data.success) {
+        setUserRole(response.data.data.role);
+      }
     } catch (error) {
-      console.error('Error syncing user with database:', error);
+      console.error('Error syncing/fetching user data:', error);
+      setUserRole(null); // Reset role on error
     }
   };
 
@@ -41,7 +52,7 @@ const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      await syncUserWithDatabase(result.user);
+      await syncAndFetchUser(result.user);
       return result;
     } finally {
       setLoading(false);
@@ -53,7 +64,7 @@ const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      await syncUserWithDatabase(result.user);
+      await syncAndFetchUser(result.user);
       return result;
     } finally {
       setLoading(false);
@@ -66,7 +77,7 @@ const AuthProvider = ({ children }) => {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await syncUserWithDatabase(result.user);
+      await syncAndFetchUser(result.user);
       return result;
     } finally {
       setLoading(false);
@@ -87,7 +98,7 @@ const AuthProvider = ({ children }) => {
         photoURL: photo
       });
       // Update the user in the database as well
-      await syncUserWithDatabase({
+      await syncAndFetchUser({
         ...auth.currentUser,
         displayName: name,
         photoURL: photo
@@ -109,8 +120,9 @@ const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
-        // Sync user with database whenever auth state changes to logged in
-        await syncUserWithDatabase(currentUser);
+        await syncAndFetchUser(currentUser);
+      } else {
+        setUserRole(null);
       }
       setLoading(false);
     });
@@ -123,6 +135,7 @@ const AuthProvider = ({ children }) => {
   const authInfo = {
     user,
     loading,
+    userRole,
     createUser,
     signIn,
     signInWithGoogle,

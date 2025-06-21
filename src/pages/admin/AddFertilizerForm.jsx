@@ -3,7 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ImageUpload from '../../components/ImageUpload';
 
-const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
+const AddFertilizerForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -12,17 +12,20 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
     imageUrl: '',
     subcategory: subcategories[0],
     features: [''],
-    careInstructions: [''],
-    material: 'steel', // New field
-    dimensions: '', // New field
-    weight: '', // New field
-    warranty: '', // New field
-    usage: '', // New field
-    maintenance: '', // New field
-    brand: '', // New field
-    handleType: 'ergonomic', // New field
-    weatherResistant: false, // New field
-    safetyInstructions: [''] // New field
+    composition: [''],
+    npkRatio: '', // New field specific to fertilizers
+    type: 'organic', // New field specific to fertilizers
+    weight: '',
+    coverage: '',
+    nutrients: [''],
+    bestFor: [''],
+    organicStatus: false,
+    applicationInstructions: '',
+    storageInstructions: '',
+    packagingSize: '',
+    applicationMethod: 'granular', // New field specific to fertilizers
+    releaseType: 'slow-release', // New field specific to fertilizers
+    isFeatured: false
   });
   const [loading, setLoading] = useState(false);
 
@@ -36,17 +39,20 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         imageUrl: editingProduct.imageUrl || '',
         subcategory: editingProduct.subcategory || subcategories[0],
         features: editingProduct.features || [''],
-        careInstructions: editingProduct.careInstructions || [''],
-        material: editingProduct.material || 'steel',
-        dimensions: editingProduct.dimensions || '',
+        composition: editingProduct.composition || [''],
+        npkRatio: editingProduct.npkRatio || '',
+        type: editingProduct.type || 'organic',
         weight: editingProduct.weight || '',
-        warranty: editingProduct.warranty || '',
-        usage: editingProduct.usage || '',
-        maintenance: editingProduct.maintenance || '',
-        brand: editingProduct.brand || '',
-        handleType: editingProduct.handleType || 'ergonomic',
-        weatherResistant: editingProduct.weatherResistant || false,
-        safetyInstructions: editingProduct.safetyInstructions || ['']
+        coverage: editingProduct.coverage || '',
+        nutrients: editingProduct.nutrients || [''],
+        bestFor: editingProduct.bestFor || [''],
+        organicStatus: editingProduct.organicStatus || false,
+        applicationInstructions: editingProduct.applicationInstructions || '',
+        storageInstructions: editingProduct.storageInstructions || '',
+        packagingSize: editingProduct.packagingSize || '',
+        applicationMethod: editingProduct.applicationMethod || 'granular',
+        releaseType: editingProduct.releaseType || 'slow-release',
+        isFeatured: editingProduct.isFeatured || false
       });
     }
   }, [editingProduct, isEditing, subcategories]);
@@ -94,15 +100,17 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         features: formData.features.filter(Boolean),
-        careInstructions: formData.careInstructions.filter(Boolean)
+        composition: formData.composition.filter(Boolean),
+        nutrients: formData.nutrients.filter(Boolean),
+        bestFor: formData.bestFor.filter(Boolean)
       };
 
       if (isEditing) {
         await onUpdate(productData);
       } else {
-        const response = await axios.post('http://localhost:3000/api/tools', productData);
+        const response = await axios.post('http://localhost:3000/api/fertilizers', productData);
         if (response.data.success) {
-          toast.success('Tool added successfully');
+          toast.success('Fertilizer added successfully');
           setFormData({
             name: '',
             description: '',
@@ -111,23 +119,26 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
             imageUrl: '',
             subcategory: subcategories[0],
             features: [''],
-            careInstructions: [''],
-            material: 'steel',
-            dimensions: '',
+            composition: [''],
+            npkRatio: '',
+            type: 'organic',
             weight: '',
-            warranty: '',
-            usage: '',
-            maintenance: '',
-            brand: '',
-            handleType: 'ergonomic',
-            weatherResistant: false,
-            safetyInstructions: ['']
+            coverage: '',
+            nutrients: [''],
+            bestFor: [''],
+            organicStatus: false,
+            applicationInstructions: '',
+            storageInstructions: '',
+            packagingSize: '',
+            applicationMethod: 'granular',
+            releaseType: 'slow-release',
+            isFeatured: false
           });
         }
       }
     } catch (error) {
-      console.error('Error saving tool:', error);
-      toast.error(isEditing ? 'Failed to update tool' : 'Failed to add tool');
+      console.error('Error saving fertilizer:', error);
+      toast.error(isEditing ? 'Failed to update fertilizer' : 'Failed to add fertilizer');
     } finally {
       setLoading(false);
     }
@@ -150,18 +161,6 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Brand</label>
-          <input
-            type="text"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            required
-          />
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-gray-700">Subcategory</label>
           <select
             name="subcategory"
@@ -176,48 +175,60 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Material</label>
-          <select
-            name="material"
-            value={formData.material}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="steel">Steel</option>
-            <option value="aluminum">Aluminum</option>
-            <option value="plastic">Plastic</option>
-            <option value="wood">Wood</option>
-            <option value="carbon-fiber">Carbon Fiber</option>
-            <option value="composite">Composite</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Handle Type</label>
-          <select
-            name="handleType"
-            value={formData.handleType}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-          >
-            <option value="ergonomic">Ergonomic</option>
-            <option value="standard">Standard</option>
-            <option value="cushioned">Cushioned</option>
-            <option value="telescopic">Telescopic</option>
-            <option value="d-shaped">D-Shaped</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Dimensions</label>
+          <label className="block text-sm font-medium text-gray-700">NPK Ratio</label>
           <input
             type="text"
-            name="dimensions"
-            value={formData.dimensions}
+            name="npkRatio"
+            value={formData.npkRatio}
             onChange={handleChange}
-            placeholder="e.g., 15 x 5 x 2 inches"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 10-10-10"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Type</label>
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="organic">Organic</option>
+            <option value="synthetic">Synthetic</option>
+            <option value="mineral">Mineral</option>
+            <option value="bio">Bio</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Application Method</label>
+          <select
+            name="applicationMethod"
+            value={formData.applicationMethod}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="granular">Granular</option>
+            <option value="liquid">Liquid</option>
+            <option value="powder">Powder</option>
+            <option value="spike">Spike</option>
+            <option value="spray">Spray</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Release Type</label>
+          <select
+            name="releaseType"
+            value={formData.releaseType}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+          >
+            <option value="slow-release">Slow Release</option>
+            <option value="quick-release">Quick Release</option>
+            <option value="controlled-release">Controlled Release</option>
+          </select>
         </div>
 
         <div>
@@ -234,14 +245,26 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Warranty</label>
+          <label className="block text-sm font-medium text-gray-700">Coverage Area (sq ft)</label>
           <input
             type="text"
-            name="warranty"
-            value={formData.warranty}
+            name="coverage"
+            value={formData.coverage}
             onChange={handleChange}
-            placeholder="e.g., 2 years limited"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 100-150"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Packaging Size</label>
+          <input
+            type="text"
+            name="packagingSize"
+            value={formData.packagingSize}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+            placeholder="e.g., 5L, 10kg"
           />
         </div>
 
@@ -293,26 +316,26 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Usage Instructions</label>
+          <label className="block text-sm font-medium text-gray-700">Application Instructions</label>
           <textarea
-            name="usage"
-            value={formData.usage}
+            name="applicationInstructions"
+            value={formData.applicationInstructions}
             onChange={handleChange}
             rows="3"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="Enter detailed usage instructions..."
+            placeholder="Enter detailed application instructions..."
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Maintenance Instructions</label>
+          <label className="block text-sm font-medium text-gray-700">Storage Instructions</label>
           <textarea
-            name="maintenance"
-            value={formData.maintenance}
+            name="storageInstructions"
+            value={formData.storageInstructions}
             onChange={handleChange}
             rows="3"
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-            placeholder="Enter maintenance instructions..."
+            placeholder="Enter storage instructions..."
           />
         </div>
 
@@ -320,15 +343,102 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
           <div className="flex items-center">
             <input
               type="checkbox"
-              name="weatherResistant"
-              checked={formData.weatherResistant}
+              name="organicStatus"
+              checked={formData.organicStatus}
               onChange={handleChange}
               className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
             />
             <label className="ml-2 block text-sm text-gray-700">
-              Weather Resistant
+              Organic Product
             </label>
           </div>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Composition</label>
+          {formData.composition.map((item, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'composition')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter composition item"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'composition')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('composition')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Composition
+          </button>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Nutrients</label>
+          {formData.nutrients.map((nutrient, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={nutrient}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'nutrients')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter nutrient (e.g., Nitrogen, Phosphorus)"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'nutrients')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('nutrients')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Nutrient
+          </button>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Best For</label>
+          {formData.bestFor.map((item, index) => (
+            <div key={index} className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => handleArrayChange(index, e.target.value, 'bestFor')}
+                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
+                placeholder="Enter plant type or use case"
+              />
+              <button
+                type="button"
+                onClick={() => removeArrayField(index, 'bestFor')}
+                className="px-2 py-1 text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => addArrayField('bestFor')}
+            className="mt-2 text-sm text-green-600 hover:text-green-800"
+          >
+            + Add Best For
+          </button>
         </div>
 
         <div className="md:col-span-2">
@@ -361,35 +471,6 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Safety Instructions</label>
-          {formData.safetyInstructions.map((instruction, index) => (
-            <div key={index} className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={instruction}
-                onChange={(e) => handleArrayChange(index, e.target.value, 'safetyInstructions')}
-                className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"
-                placeholder="Enter safety instruction"
-              />
-              <button
-                type="button"
-                onClick={() => removeArrayField(index, 'safetyInstructions')}
-                className="px-2 py-1 text-red-600 hover:text-red-800"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => addArrayField('safetyInstructions')}
-            className="mt-2 text-sm text-green-600 hover:text-green-800"
-          >
-            + Add Safety Instruction
-          </button>
-        </div>
-
-        <div className="md:col-span-2">
           <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
             <input
               type="checkbox"
@@ -408,7 +489,7 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
               )}
             </label>
           </div>
-          <p className="mt-1 text-sm text-gray-500">Featured tools will be highlighted on the home page and in product listings.</p>
+          <p className="mt-1 text-sm text-gray-500">Featured fertilizers will be highlighted on the home page and in product listings.</p>
         </div>
       </div>
 
@@ -427,11 +508,11 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
           disabled={loading}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? 'Saving...' : isEditing ? 'Update Tool' : 'Add Tool'}
+          {loading ? 'Saving...' : isEditing ? 'Update Product' : 'Add Product'}
         </button>
       </div>
     </form>
   );
 };
 
-export default AddToolForm; 
+export default AddFertilizerForm; 
