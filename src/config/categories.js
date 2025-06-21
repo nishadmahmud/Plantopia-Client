@@ -8,7 +8,7 @@ export const productCategories = [
     path: '/plants',
     icon: FaLeaf,
     description: 'Discover our collection of indoor and outdoor plants',
-    subcategories: ['Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Fruit Plants'],
+    subcategories: ['Indoor Plants', 'Flowering Plants', 'Fruit Plants'],
     color: 'from-green-900/80 via-green-800/60 to-green-900/80',
   },
   {
