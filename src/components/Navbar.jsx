@@ -2,7 +2,7 @@ import React, { useContext, useState, useRef } from 'react';
 import { NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthContext } from '../auth/AuthProvider';
-import { FaShoppingCart, FaShoppingBag, FaTrash, FaBars, FaTimes } from 'react-icons/fa';
+import { FaShoppingCart, FaShoppingBag, FaTrash, FaBars, FaTimes, FaCog } from 'react-icons/fa';
 import { productCategories } from '../config/categories';
 import { useCart } from '../context/CartContext';
 
@@ -18,7 +18,7 @@ const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=E0F2F1&c
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logOut } = useContext(AuthContext);
+  const { user, userRole, logOut } = useContext(AuthContext);
   const [shopOpen, setShopOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -151,6 +151,21 @@ const Navbar = () => {
           >
             <div className="py-2">
               {navLinks.map(link => renderNavLink(link, true))}
+              {userRole === 'admin' && (
+                <div className="px-5 py-3 border-t border-gray-100">
+                                     <NavLink
+                     to="/admin"
+                     className={({ isActive }) =>
+                       `flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors rounded-md font-medium ${
+                         isActive ? 'bg-blue-100/80 text-blue-700 font-semibold' : ''
+                       }`
+                     }
+                   >
+                     <FaCog className="text-lg" />
+                     <span>Admin Dashboard</span>
+                   </NavLink>
+                </div>
+              )}
               <div className="px-5 py-3 border-t border-gray-100">
                 <p className="text-sm font-medium text-gray-600 mb-2">Shop Categories</p>
                 {productCategories.map((category) => (
@@ -174,6 +189,22 @@ const Navbar = () => {
 
       {/* Cart and Profile Section */}
       <div className="flex items-center gap-4">
+        {/* Admin Dashboard Link */}
+        {userRole === 'admin' && (
+                     <NavLink
+             to="/admin"
+             className={({ isActive }) =>
+               `hidden md:flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                 isActive
+                   ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                   : 'text-blue-600 hover:bg-blue-50 hover:text-blue-700'
+               }`
+             }
+           >
+             <FaCog className="text-lg" />
+             <span>Admin Dashboard</span>
+           </NavLink>
+        )}
         {/* Cart Icon with badge and mini cart */}
         <div className="relative" ref={cartRef}>
           <button
