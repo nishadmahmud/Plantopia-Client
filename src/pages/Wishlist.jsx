@@ -5,6 +5,7 @@ import { AuthContext } from '../auth/AuthProvider';
 import { useCart } from '../context/CartContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../utils/api';
 
 const Wishlist = () => {
   const { user } = useContext(AuthContext);
@@ -21,7 +22,7 @@ const Wishlist = () => {
   const fetchWishlist = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:3000/api/users/${user.uid}/wishlist`);
+              const response = await axios.get(`${API_URL}/api/users/${user.uid}/wishlist`);
       if (response.data.success) {
         setWishlist(response.data.data);
       }
@@ -35,7 +36,7 @@ const Wishlist = () => {
 
   const removeFromWishlist = async (productId) => {
     try {
-      const response = await axios.delete(`http://localhost:3000/api/users/${user.uid}/wishlist/${productId}`);
+              const response = await axios.delete(`${API_URL}/api/users/${user.uid}/wishlist/${productId}`);
       if (response.data.success) {
         setWishlist(prev => prev.filter(item => item.productId !== productId));
         toast.success('Removed from wishlist');

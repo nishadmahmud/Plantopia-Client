@@ -10,6 +10,7 @@ import AddSoilForm from './AddSoilForm';
 import AddFertilizerForm from './AddFertilizerForm';
 import OrderDetailsModal from '../../components/OrderDetailsModal';
 import AddBlogForm from './AddBlogForm';
+import { API_URL } from '../../utils/api';
 
 export const productCategories = [
   { id: 'plants', label: 'Plants', subcategories: ['Indoor Plants', 'Outdoor Plants', 'Flowering Plants', 'Fruit Plants'] },
@@ -37,11 +38,11 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       const [ordersRes, usersRes, blogsRes, ...productResponses] = await Promise.all([
-        axios.get('http://localhost:3000/api/orders'),
-        axios.get('http://localhost:3000/api/users'),
-        axios.get('http://localhost:3000/api/blogs'),
+        axios.get(`${API_URL}/api/orders`),
+        axios.get(`${API_URL}/api/users`),
+        axios.get(`${API_URL}/api/blogs`),
         ...productCategories.map(category => 
-          axios.get(`http://localhost:3000/api/${category.id}`)
+          axios.get(`${API_URL}/api/${category.id}`)
         )
       ]);
 
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
   const handleDeleteProduct = async (product) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await axios.delete(`http://localhost:3000/api/${product.category}/${product._id}`);
+        const response = await axios.delete(`${API_URL}/api/${product.category}/${product._id}`);
         if (response.data.success) {
           toast.success('Product deleted successfully');
           setProducts(products.filter(p => p._id !== product._id));
@@ -115,7 +116,7 @@ const AdminDashboard = () => {
   const handleUpdateProduct = async (updatedData) => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/api/${editingProduct.category}/${editingProduct._id}`,
+        `${API_URL}/api/${editingProduct.category}/${editingProduct._id}`,
         updatedData
       );
       
@@ -257,7 +258,7 @@ const AdminDashboard = () => {
     try {
       console.log('Updating order status:', { orderId, newStatus });
       
-      const response = await axios.put(`http://localhost:3000/api/orders/${orderId}/status`, {
+      const response = await axios.put(`${API_URL}/api/orders/${orderId}/status`, {
         status: newStatus,
         orderId: orderId // Adding orderId to request body as well
       });
@@ -306,7 +307,7 @@ const AdminDashboard = () => {
   const handleDeleteBlog = async (blogId) => {
     if (window.confirm('Are you sure you want to delete this blog post?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/blogs/${blogId}`);
+        await axios.delete(`${API_URL}/api/blogs/${blogId}`);
         toast.success('Blog post deleted successfully');
         setBlogs(blogs.filter(b => b._id !== blogId));
       } catch (error) {

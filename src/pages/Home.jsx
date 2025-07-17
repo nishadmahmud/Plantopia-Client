@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { productCategories } from '../config/categories';
 import React from 'react';
+import { API_URL } from '../utils/api';
 
 const AUTO_SLIDE_INTERVAL = 5000;
 
@@ -44,7 +45,7 @@ const Home = () => {
       try {
         const responses = await Promise.all(
           productCategories.map(category =>
-            fetch(`http://localhost:3000/api/${category.id}`)
+            fetch(`${API_URL}/api/${category.id}`)
               .then(res => res.json())
           )
         );

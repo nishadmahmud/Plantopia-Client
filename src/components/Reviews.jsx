@@ -3,6 +3,7 @@ import { AuthContext } from '../auth/AuthProvider';
 import { FaStar } from 'react-icons/fa';
 import axios from 'axios';
 import ReviewForm from './ReviewForm';
+import { API_URL } from '../utils/api';
 
 const Reviews = ({ productId, productType }) => {
   const { user } = useContext(AuthContext);
@@ -13,7 +14,7 @@ const Reviews = ({ productId, productType }) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/reviews/${productId}`);
+              const response = await axios.get(`${API_URL}/api/reviews/${productId}`);
       if (response.data.success) {
         setReviews(response.data.data);
       }
@@ -29,7 +30,7 @@ const Reviews = ({ productId, productType }) => {
       return;
     }
     try {
-      const response = await axios.get(`http://localhost:3000/api/reviews/check/${user.uid}/${productId}`);
+                const response = await axios.get(`${API_URL}/api/reviews/check/${user.uid}/${productId}`);
       if (response.data.success) {
         setCanReview(response.data.canReview);
       }

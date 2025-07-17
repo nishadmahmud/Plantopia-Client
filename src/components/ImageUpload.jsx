@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaUpload, FaSpinner, FaCheck, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../utils/api';
 
 const ImageUpload = ({ onImageUpload, currentImageUrl, label = "Upload Image" }) => {
   const [uploading, setUploading] = useState(false);
@@ -29,7 +30,7 @@ const ImageUpload = ({ onImageUpload, currentImageUrl, label = "Upload Image" })
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await axios.post('http://localhost:3000/api/upload-image', formData, {
+              const response = await axios.post(`${API_URL}/api/upload-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

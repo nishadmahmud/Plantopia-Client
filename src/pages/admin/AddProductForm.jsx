@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ImageUpload from '../../components/ImageUpload';
+import { API_URL } from '../../utils/api';
 
 const AddProductForm = ({ category, subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -82,7 +83,7 @@ const AddProductForm = ({ category, subcategories, editingProduct, isEditing, on
       if (isEditing) {
         await onUpdate(productData);
       } else {
-        const response = await axios.post(`http://localhost:3000/api/${category}`, productData);
+        const response = await axios.post(`${API_URL}/api/${category}`, productData);
         if (response.data.success) {
           toast.success('Product added successfully');
           setFormData({

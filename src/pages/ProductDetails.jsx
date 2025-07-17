@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { AuthContext } from '../auth/AuthProvider';
 import { useCart } from '../context/CartContext';
+import { API_URL } from '../utils/api';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -31,7 +32,7 @@ const ProductDetails = () => {
 
         for (const category of categories) {
           try {
-            const response = await axios.get(`http://localhost:3000/api/${category}/${id}`);
+            const response = await axios.get(`${API_URL}/api/${category}/${id}`);
             if (response.data.success) {
               productData = { ...response.data.data, category };
               break;
@@ -64,7 +65,7 @@ const ProductDetails = () => {
 
   const checkWishlistStatus = async (productId) => {
     try {
-      const response = await axios.get(`http://localhost:3000/api/users/${user.uid}/wishlist`);
+              const response = await axios.get(`${API_URL}/api/users/${user.uid}/wishlist`);
       if (response.data.success) {
         const isWishlisted = response.data.data.some(item => item.productId === productId);
         setIsInWishlist(isWishlisted);
@@ -84,12 +85,12 @@ const ProductDetails = () => {
     try {
       if (isInWishlist) {
         // Remove from wishlist
-        await axios.delete(`http://localhost:3000/api/users/${user.uid}/wishlist/${product._id}`);
+        await axios.delete(`${API_URL}/api/users/${user.uid}/wishlist/${product._id}`);
         setIsInWishlist(false);
         toast.success('Removed from wishlist');
       } else {
         // Add to wishlist
-        await axios.post(`http://localhost:3000/api/users/${user.uid}/wishlist`, {
+        await axios.post(`${API_URL}/api/users/${user.uid}/wishlist`, {
           productId: product._id,
           productType: product.category
         });
@@ -131,7 +132,7 @@ const ProductDetails = () => {
     }
 
     try {
-      const res = await axios.post(`http://localhost:3000/api/${product.category}/${product._id}/comments`, {
+      const res = await axios.post(`${API_URL}/api/${product.category}/${product._id}/comments`, {
         text: newComment,
         user: {
           uid: user.uid,
@@ -160,7 +161,7 @@ const ProductDetails = () => {
     }
 
     try {
-      const res = await axios.post(`http://localhost:3000/api/${product.category}/${product._id}/comments/${commentId}/replies`, {
+      const res = await axios.post(`${API_URL}/api/${product.category}/${product._id}/comments/${commentId}/replies`, {
         text: replyText,
         user: {
           uid: user.uid,
@@ -194,7 +195,7 @@ const ProductDetails = () => {
     }
 
     try {
-      const res = await axios.delete(`http://localhost:3000/api/${product.category}/${product._id}/comments/${commentId}`, {
+      const res = await axios.delete(`${API_URL}/api/${product.category}/${product._id}/comments/${commentId}`, {
         data: { userUid: user.uid }
       });
 

@@ -11,6 +11,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebase.config";
 import axios from "axios";
+import { API_URL } from "../utils/api";
 
 export const AuthContext = createContext(null);
 
@@ -28,7 +29,7 @@ const AuthProvider = ({ children }) => {
     
     try {
       // Sync user data with the backend
-      await axios.post('http://localhost:3000/api/users', {
+              await axios.post(`${API_URL}/api/users`, {
         uid: currentUser.uid,
         displayName: currentUser.displayName,
         email: currentUser.email,
@@ -37,7 +38,7 @@ const AuthProvider = ({ children }) => {
       });
 
       // After syncing, fetch the full user profile including the role
-      const response = await axios.get(`http://localhost:3000/api/users/${currentUser.uid}`);
+              const response = await axios.get(`${API_URL}/api/users/${currentUser.uid}`);
       if (response.data.success) {
         setUserRole(response.data.data.role);
       }

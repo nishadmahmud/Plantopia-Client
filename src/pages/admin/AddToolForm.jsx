@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ImageUpload from '../../components/ImageUpload';
+import { API_URL } from '../../utils/api';
 
 const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -100,7 +101,7 @@ const AddToolForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCan
       if (isEditing) {
         await onUpdate(productData);
       } else {
-        const response = await axios.post('http://localhost:3000/api/tools', productData);
+        const response = await axios.post(`${API_URL}/api/tools`, productData);
         if (response.data.success) {
           toast.success('Tool added successfully');
           setFormData({

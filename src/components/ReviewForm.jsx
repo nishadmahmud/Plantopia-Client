@@ -3,6 +3,7 @@ import { AuthContext } from '../auth/AuthProvider';
 import { FaStar } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { API_URL } from '../utils/api';
 
 const ReviewForm = ({ productId, productType, onReviewAdded }) => {
   const { user } = useContext(AuthContext);
@@ -20,7 +21,7 @@ const ReviewForm = ({ productId, productType, onReviewAdded }) => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post('http://localhost:3000/api/reviews', {
+              const response = await axios.post(`${API_URL}/api/reviews`, {
         userId: user.uid,
         productId,
         productType,

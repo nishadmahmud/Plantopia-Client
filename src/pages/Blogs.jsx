@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import DOMPurify from 'dompurify';
+import { API_URL } from '../utils/api';
 
 const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
@@ -10,7 +11,7 @@ const Blogs = () => {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/blogs');
+        const response = await axios.get(`${API_URL}/api/blogs`);
         if (response.data.success) {
           setBlogs(response.data.data);
         }

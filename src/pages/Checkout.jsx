@@ -8,6 +8,7 @@ import { FaCreditCard, FaMoneyBillWave } from 'react-icons/fa';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { getCountryCode } from '../utils/helpers';
+import { API_URL } from '../utils/api';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -112,7 +113,7 @@ const Checkout = () => {
     const fetchUserData = async () => {
       if (user?.uid) {
         try {
-          const response = await axios.get(`http://localhost:3000/api/users/${user.uid}`);
+          const response = await axios.get(`${API_URL}/api/users/${user.uid}`);
           if (response.data.success && response.data.data.shippingAddress) {
             const { shippingAddress } = response.data.data;
             setShipping(prev => ({
@@ -141,7 +142,7 @@ const Checkout = () => {
     setStripeLoading(true);
     setPaymentError(null);
     try {
-      const response = await axios.post('http://localhost:3000/api/create-payment-intent', {
+              const response = await axios.post(`${API_URL}/api/create-payment-intent`, {
         amount: Math.round(cartSummary.total * 100),
         currency: 'bdt',
       });
@@ -178,7 +179,7 @@ const Checkout = () => {
           paymentMethod: method
         };
 
-        const orderResponse = await axios.post('http://localhost:3000/api/orders', orderData);
+        const orderResponse = await axios.post(`${API_URL}/api/orders`, orderData);
 
         if (orderResponse.data.success) {
           await clearCart();

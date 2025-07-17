@@ -3,6 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaTimes, FaBold, FaItalic, FaListUl, FaListOl } from 'react-icons/fa';
 import ImageUpload from '../../components/ImageUpload';
+import { API_URL } from '../../utils/api';
 
 const AddBlogForm = ({ blogData, onClose, onSuccess }) => {
   const [content, setContent] = useState('');
@@ -89,10 +90,10 @@ const AddBlogForm = ({ blogData, onClose, onSuccess }) => {
     try {
       let response;
       if (blogData) {
-        response = await axios.put(`http://localhost:3000/api/blogs/${blogData._id}`, blogDataPayload);
+        response = await axios.put(`${API_URL}/api/blogs/${blogData._id}`, blogDataPayload);
         toast.success('Blog post updated successfully!');
       } else {
-        response = await axios.post('http://localhost:3000/api/blogs', blogDataPayload);
+        response = await axios.post(`${API_URL}/api/blogs`, blogDataPayload);
         toast.success('Blog post created successfully!');
       }
 

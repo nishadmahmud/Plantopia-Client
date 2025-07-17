@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { FaBox, FaShoppingBag, FaTrash, FaCamera, FaUpload } from 'react-icons/fa';
 import OrderDetailsModal from '../components/OrderDetailsModal';
+import { API_URL } from '../utils/api';
 
 const defaultAvatar = 'https://ui-avatars.com/api/?name=User&background=E0F2F1&color=388E3C&rounded=true';
 
@@ -36,7 +37,7 @@ const Profile = () => {
     const fetchUserData = async () => {
       if (user?.uid) {
         try {
-          const response = await axios.get(`http://localhost:3000/api/users/${user.uid}`);
+          const response = await axios.get(`${API_URL}/api/users/${user.uid}`);
           if (response.data.success) {
             setUserData(response.data.data);
             if (response.data.data.shippingAddress) {
@@ -103,7 +104,7 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('image', selectedImage);
 
-      const response = await axios.post('http://localhost:3000/api/upload-image', formData, {
+              const response = await axios.post(`${API_URL}/api/upload-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -142,7 +143,7 @@ const Profile = () => {
     }
 
     try {
-      const response = await axios.delete(`http://localhost:3000/api/orders/${orderId}`, {
+              const response = await axios.delete(`${API_URL}/api/orders/${orderId}`, {
         data: { userId: user.uid }
       });
 
@@ -171,7 +172,7 @@ const Profile = () => {
     setLoading(true);
     try {
       await updateUserProfile(name, photo);
-      await axios.put(`http://localhost:3000/api/users/${user.uid}`, {
+              await axios.put(`${API_URL}/api/users/${user.uid}`, {
         displayName: name,
         photoURL: photo,
         email: user.email,

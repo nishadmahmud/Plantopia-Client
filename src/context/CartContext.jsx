@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../auth/AuthProvider';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../utils/api';
 
 const CartContext = createContext();
 const LOCAL_STORAGE_CART_KEY = 'plantopia_cart';
@@ -33,7 +34,7 @@ export const CartProvider = ({ children }) => {
       if (user?.uid) {
         try {
           // First, fetch the user's cart from database
-          const response = await axios.get(`http://localhost:3000/api/cart/${user.uid}`);
+          const response = await axios.get(`${API_URL}/api/cart/${user.uid}`);
           
           if (response.data.success) {
             const dbCart = response.data.data;
@@ -78,7 +79,7 @@ export const CartProvider = ({ children }) => {
   const syncCart = async (newCart) => {
     if (user?.uid) {
       try {
-        await axios.put(`http://localhost:3000/api/cart/${user.uid}`, {
+        await axios.put(`${API_URL}/api/cart/${user.uid}`, {
           cart: newCart
         });
       } catch (error) {

@@ -3,6 +3,7 @@ import { FaTimes, FaBox, FaTruck, FaMapMarkerAlt, FaUser, FaEnvelope, FaPhone, F
 import { formatDate } from '../utils/helpers';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { API_URL } from '../utils/api';
 
 const OrderDetailsModal = ({ order, onClose, isAdmin = false, onStatusUpdate, onOrderDelete }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -33,7 +34,7 @@ const OrderDetailsModal = ({ order, onClose, isAdmin = false, onStatusUpdate, on
 
     setIsDeleting(true);
     try {
-      const response = await axios.delete(`http://localhost:3000/api/orders/${order._id}`, {
+              const response = await axios.delete(`${API_URL}/api/orders/${order._id}`, {
         data: { userId: order.userId }
       });
 

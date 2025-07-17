@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { FaSearch } from 'react-icons/fa';
 import { IoMdClose } from 'react-icons/io';
 import { useCart } from '../context/CartContext';
+import { API_URL } from '../utils/api';
 
 const ProductList = ({ category, subcategories }) => {
   const [products, setProducts] = useState([]);
@@ -19,7 +20,7 @@ const ProductList = ({ category, subcategories }) => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/${category}`);
+        const response = await fetch(`${API_URL}/api/${category}`);
         const data = await response.json();
 
         if (data.success) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ImageUpload from '../../components/ImageUpload';
+import { API_URL } from '../../utils/api';
 
 const AddFertilizerForm = ({ subcategories, editingProduct, isEditing, onUpdate, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -108,7 +109,7 @@ const AddFertilizerForm = ({ subcategories, editingProduct, isEditing, onUpdate,
       if (isEditing) {
         await onUpdate(productData);
       } else {
-        const response = await axios.post('http://localhost:3000/api/fertilizers', productData);
+        const response = await axios.post(`${API_URL}/api/fertilizers`, productData);
         if (response.data.success) {
           toast.success('Fertilizer added successfully');
           setFormData({
